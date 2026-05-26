@@ -1,0 +1,90 @@
+{
+  "info": {
+    "name": "Shop Market Compose Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8282"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Login customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/User/loginUser",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customerCode\":\"1001\",\"password\":\"123456\"}"
+        }
+      }
+    },
+    {
+      "name": "Products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/Product/GetListKala"
+      }
+    },
+    {
+      "name": "Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/Product/GetProductCategory"
+      }
+    },
+    {
+      "name": "Banners",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/Banner/GetBanner"
+      }
+    },
+    {
+      "name": "Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/User/CustomerProfile"
+      }
+    },
+    {
+      "name": "Simulate cart",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/Cart/GetCartSimulateRsult",
+        "body": {
+          "mode": "raw",
+          "raw": "[{\"productCode\":100101,\"quantity\":2}]"
+        }
+      }
+    }
+  ]
+}

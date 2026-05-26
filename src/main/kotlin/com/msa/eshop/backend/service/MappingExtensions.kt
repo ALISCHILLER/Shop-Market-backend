@@ -1,0 +1,113 @@
+package com.msa.eshop.backend.service
+
+import com.msa.eshop.backend.common.BannerDto
+import com.msa.eshop.backend.common.DiscountResultDto
+import com.msa.eshop.backend.common.OrderAddressDto
+import com.msa.eshop.backend.common.PaymentTermDto
+import com.msa.eshop.backend.common.ProductDto
+import com.msa.eshop.backend.common.ProductGroupDto
+import com.msa.eshop.backend.common.ReportCartDetailsDto
+import com.msa.eshop.backend.common.ReportHistoryCustomerDto
+import com.msa.eshop.backend.common.UserDto
+import com.msa.eshop.backend.domain.Banner
+import com.msa.eshop.backend.domain.Cart
+import com.msa.eshop.backend.domain.CartItem
+import com.msa.eshop.backend.domain.Customer
+import com.msa.eshop.backend.domain.CustomerAddress
+import com.msa.eshop.backend.domain.Discount
+import com.msa.eshop.backend.domain.PaymentTerm
+import com.msa.eshop.backend.domain.Product
+import com.msa.eshop.backend.domain.ProductCategory
+
+fun Customer.toDto(): UserDto = UserDto(
+    id = requireNotNull(id).toString(),
+    customerCode = customerCode,
+    customerName = customerName,
+    mobile = mobile,
+    phone = phone,
+    center = center,
+    nationalCode = nationalCode,
+    password = null,
+    salt = null
+)
+
+fun Product.toDto(): ProductDto = ProductDto(
+    id = requireNotNull(id).toString(),
+    productName = productName,
+    productCode = productCode,
+    fullNameKala1 = fullNameKala1,
+    unit1 = unit1,
+    unitid1 = unitid1,
+    convertFactor1 = convertFactor1,
+    fullNameKala2 = fullNameKala2,
+    unit2 = unit2,
+    convertFactor2 = convertFactor2,
+    unitid2 = unitid2,
+    productGroupCode = productGroupCode,
+    price = price,
+    isDiscounts = isDiscounts,
+    productImage = productImage
+)
+
+fun ProductCategory.toDto(): ProductGroupDto = ProductGroupDto(
+    productCategoryCode = productCategoryCode,
+    productCategoryName = productCategoryName,
+    productCategoryImage = productCategoryImage,
+    productCategoryImageUnselect = productCategoryImageUnselect
+)
+
+fun Banner.toDto(): BannerDto = BannerDto(
+    id = requireNotNull(id).toString(),
+    bannerImage = bannerImage,
+    bannerName = bannerName
+)
+
+fun Discount.toDto(): DiscountResultDto = DiscountResultDto(
+    id = requireNotNull(id).toString(),
+    productId = product?.id.toString(),
+    discountPercent = discountPercent,
+    fromNumber = fromNumber,
+    endNumber = endNumber
+)
+
+fun CustomerAddress.toDto(): OrderAddressDto = OrderAddressDto(
+    id = requireNotNull(id).toString(),
+    centerName = centerName,
+    customerAddress = customerAddress,
+    customerMobile = customerMobile,
+    customerPhone = customerPhone
+)
+
+fun PaymentTerm.toDto(): PaymentTermDto = PaymentTermDto(
+    id = requireNotNull(id).toString(),
+    name = name,
+    deadLine = deadLine
+)
+
+fun Cart.toHistoryDto(): ReportHistoryCustomerDto = ReportHistoryCustomerDto(
+    id = requireNotNull(id).toString(),
+    customerCode = customer?.customerCode.orEmpty(),
+    customerName = customerNameSnapshot,
+    date = salesDate.toString(),
+    address = customerAddressSnapshot,
+    status = statusName,
+    color = statusColor,
+    cartCode = cartCode
+)
+
+fun CartItem.toDetailsDto(cart: Cart): ReportCartDetailsDto = ReportCartDetailsDto(
+    id = requireNotNull(id).toString(),
+    cartCode = cart.cartCode,
+    customerAddress = cart.customerAddressSnapshot,
+    customerName = cart.customerNameSnapshot,
+    discount = discount,
+    price = price,
+    productCode = productCode.toString(),
+    productImageUrl = productImageUrl.orEmpty(),
+    productName = productName,
+    quantity = quantity,
+    salesDate = cart.salesDate.toString(),
+    statusName = cart.statusName,
+    tax = tax,
+    total = total
+)

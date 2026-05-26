@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    clean-disabled: true
+
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
