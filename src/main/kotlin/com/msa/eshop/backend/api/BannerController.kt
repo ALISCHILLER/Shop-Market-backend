@@ -12,5 +12,6 @@ class BannerController(
     private val catalogService: CatalogService
 ) {
     @GetMapping("/GetBanner")
-    fun banners(): BannerResponse = BannerResponse(catalogService.banners())
+    fun banners(): BannerResponse =
+        BannerResponse(catalogService.banners())
 }

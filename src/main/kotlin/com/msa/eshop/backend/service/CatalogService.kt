@@ -22,35 +22,49 @@ class CatalogService(
     private val bannerRepository: BannerRepository
 ) {
     @Transactional(readOnly = true)
-    fun products(): List<ProductDto> = productRepository.findAllByOrderByProductNameAsc().map { it.toDto() }
+    fun products(): List<ProductDto> =
+        productRepository.findAllByOrderByProductNameAsc()
+            .map { it.toDto() }
 
     @Transactional(readOnly = true)
     fun productGroups(): List<ProductGroupDto> =
-        productCategoryRepository.findAllByOrderByProductCategoryCodeAsc().map { it.toDto() }
+        productCategoryRepository.findAllByOrderByProductCategoryCodeAsc()
+            .map { it.toDto() }
 
     @Transactional(readOnly = true)
-    fun banners(): List<BannerDto> = bannerRepository.findAllByOrderByBannerNameAsc().map { it.toDto() }
+    fun banners(): List<BannerDto> =
+        bannerRepository.findAllByOrderByBannerNameAsc()
+            .map { it.toDto() }
 
     @Transactional(readOnly = true)
     fun discounts(productIdOrCode: String): List<DiscountResultDto> {
         val value = productIdOrCode.trim()
+
         if (value.isBlank()) {
-            return discountRepository.findAllByOrderByFromNumberAsc().map { it.toDto() }
+            return discountRepository.findAllByOrderByFromNumberAsc()
+                .map { it.toDto() }
         }
 
-        val byUuid = value.toUuidOrNull()?.let { discountRepository.findByProductId(it) }
-        if (byUuid != null) return byUuid.sortedBy { it.fromNumber }.map { it.toDto() }
+        val byUuid = runCatching { UUID.fromString(value) }.getOrNull()
+        if (byUuid != null) {
+            return discountRepository.findByProductId(byUuid)
+                .sortedBy { it.fromNumber }
+                .map { it.toDto() }
+        }
 
-        val byCode = value.toIntOrNull()?.let { discountRepository.findByProductProductCode(it) }
-        if (byCode != null) return byCode.sortedBy { it.fromNumber }.map { it.toDto() }
+        val byCode = value.toIntOrNull()
+        if (byCode != null) {
+            return discountRepository.findByProductProductCode(byCode)
+                .sortedBy { it.fromNumber }
+                .map { it.toDto() }
+        }
 
         throw BadRequestException("شناسه کالا معتبر نیست")
     }
 
     @Transactional(readOnly = true)
-    fun getProduct(productId: UUID): ProductDto = productRepository.findById(productId)
-        .orElseThrow { NotFoundException("کالا پیدا نشد") }
-        .toDto()
-
-    private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
+    fun getProduct(productId: UUID): ProductDto =
+        productRepository.findById(productId)
+            .orElseThrow { NotFoundException("کالا پیدا نشد") }
+            .toDto()
 }

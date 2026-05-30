@@ -19,9 +19,13 @@ interface ProductCategoryRepository : JpaRepository<ProductCategory, Int> {
 
 interface ProductRepository : JpaRepository<Product, UUID> {
     fun findByProductCode(productCode: Int): Product?
+    fun findByProductCodeIn(productCodes: Collection<Int>): List<Product>
+
     fun existsByProductCode(productCode: Int): Boolean
     fun existsByProductCodeAndIdNot(productCode: Int, id: UUID): Boolean
+
     fun countByProductGroupCode(productGroupCode: Int): Long
+
     fun findAllByOrderByProductNameAsc(): List<Product>
     fun findByProductGroupCodeOrderByProductNameAsc(productGroupCode: Int): List<Product>
 }

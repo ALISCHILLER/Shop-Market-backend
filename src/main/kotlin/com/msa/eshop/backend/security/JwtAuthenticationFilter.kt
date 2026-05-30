@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -20,19 +21,49 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val header = request.getHeader("Authorization").orEmpty()
-        if (header.startsWith("Bearer ", ignoreCase = true) && SecurityContextHolder.getContext().authentication == null) {
-            val token = header.substringAfter(" ").trim()
+        if (SecurityContextHolder.getContext().authentication != null) {
+            filterChain.doFilter(request, response)
+            return
+        }
+
+        val token = extractBearerToken(request)
+
+        if (token != null) {
             val claims = jwtTokenService.parseToken(token)
+
             if (claims != null) {
                 val customer = customerRepository.findByCustomerCode(claims.subject)
+
                 if (customer != null && customer.enabled) {
-                    val authorities = listOf(SimpleGrantedAuthority("ROLE_${customer.role.uppercase()}"))
-                    val authentication = UsernamePasswordAuthenticationToken(customer.customerCode, null, authorities)
+                    val authorities = listOf(
+                        SimpleGrantedAuthority("ROLE_${customer.role.uppercase().removePrefix("ROLE_")}")
+                    )
+
+                    val authentication = UsernamePasswordAuthenticationToken(
+                        customer.customerCode,
+                        null,
+                        authorities
+                    )
+
+                    authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
+
                     SecurityContextHolder.getContext().authentication = authentication
                 }
             }
         }
+
         filterChain.doFilter(request, response)
+    }
+
+    private fun extractBearerToken(request: HttpServletRequest): String? {
+        val header = request.getHeader("Authorization") ?: return null
+
+        if (!header.startsWith("Bearer ", ignoreCase = true)) {
+            return null
+        }
+
+        return header.substringAfter("Bearer ", "")
+            .trim()
+            .takeIf { it.isNotBlank() }
     }
 }

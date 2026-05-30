@@ -66,15 +66,14 @@ class PricingService(
         quantity: Int,
         paymentTerm: PaymentTerm?
     ): SimulateDto {
-        val baseLine = calculate(product, quantity, paymentTerm, PaymentKind.RECEIPT)
-        val immediate = calculate(product, quantity, paymentTerm, PaymentKind.IMMEDIATE)
         val receipt = calculate(product, quantity, paymentTerm, PaymentKind.RECEIPT)
+        val immediate = calculate(product, quantity, paymentTerm, PaymentKind.IMMEDIATE)
         val cheque = calculate(product, quantity, paymentTerm, PaymentKind.CHEQUE)
 
         return SimulateDto(
             convertFactor1 = product.convertFactor1,
             convertFactor2 = product.convertFactor2,
-            discountPercent = baseLine.productDiscountPercent,
+            discountPercent = receipt.productDiscountPercent,
 
             discount_Percent_PaymentTerm_Receipt = receipt.paymentDiscount.toPersistedInt(),
             discount_Percent_PaymentTerm_Receipt_Tax = receipt.tax.toPersistedInt(),
@@ -85,8 +84,8 @@ class PricingService(
             discount_Percent_PaymentTerm_immediate = immediate.paymentDiscount.toPersistedInt(),
             discount_Percent_PaymentTerm_immediate_Tax = immediate.tax.toPersistedInt(),
 
-            finalPrice = baseLine.gross.toPersistedInt(),
-            finalPriceDiscount = baseLine.afterProductDiscount.toPersistedInt(),
+            finalPrice = receipt.gross.toPersistedInt(),
+            finalPriceDiscount = receipt.afterProductDiscount.toPersistedInt(),
 
             fullNameKala1 = product.fullNameKala1.orEmpty(),
             fullNameKala2 = product.fullNameKala2.orEmpty(),
@@ -96,15 +95,15 @@ class PricingService(
             paymentTermId = paymentTerm?.id?.toString(),
 
             price = product.price,
-            priceByDiscountPercent = baseLine.afterProductDiscount.toPersistedInt(),
+            priceByDiscountPercent = receipt.afterProductDiscount.toPersistedInt(),
             priceByDiscountPercentAndTax =
-                (baseLine.afterProductDiscount + baseLine.taxWithoutPaymentDiscount).toPersistedInt(),
+                (receipt.afterProductDiscount + receipt.taxWithoutPaymentDiscount).toPersistedInt(),
 
             priceByDiscountPercentAndTax_Receipt = receipt.total.toPersistedInt(),
             priceByDiscountPercentAndTax_cheque = cheque.total.toPersistedInt(),
             priceByDiscountPercentAndTax_immediate = immediate.total.toPersistedInt(),
 
-            priceDiscount = baseLine.productDiscount.toPersistedInt(),
+            priceDiscount = receipt.productDiscount.toPersistedInt(),
 
             productCode = product.productCode,
             productGroupCode = product.productGroupCode,

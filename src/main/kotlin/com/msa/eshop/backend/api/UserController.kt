@@ -22,12 +22,18 @@ class UserController(
     private val currentUserService: CurrentUserService
 ) {
     @PostMapping("/loginUser")
-    fun login(@RequestBody request: TokenRequest): TokenResponse = authService.login(request)
+    fun login(
+        @RequestBody request: TokenRequest
+    ): TokenResponse =
+        authService.login(request)
 
     @GetMapping("/CustomerProfile")
-    fun profile(): UserResponse = UserResponse(listOf(currentUserService.requireCustomer().toDto()))
+    fun profile(): UserResponse =
+        UserResponse(listOf(currentUserService.requireCustomer().toDto()))
 
     @PostMapping("/changepassword")
-    fun changePassword(@Valid @RequestBody request: ChangePasswordRequest): ChangePasswordResponse =
+    fun changePassword(
+        @Valid @RequestBody request: ChangePasswordRequest
+    ): ChangePasswordResponse =
         ChangePasswordResponse(authService.changePassword(request))
 }

@@ -12,5 +12,6 @@ class CustomerAddressController(
     private val cartService: CartService
 ) {
     @GetMapping("/GetCustomerAddress")
-    fun customerAddresses(): OrderAddressResultModel = OrderAddressResultModel(cartService.currentCustomerAddresses())
+    fun customerAddresses(): OrderAddressResultModel =
+        OrderAddressResultModel(cartService.currentCustomerAddresses())
 }

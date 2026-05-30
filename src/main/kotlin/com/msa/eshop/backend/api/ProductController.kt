@@ -15,12 +15,16 @@ class ProductController(
     private val catalogService: CatalogService
 ) {
     @GetMapping("/GetListKala")
-    fun products(): ProductResponse = ProductResponse(catalogService.products())
+    fun products(): ProductResponse =
+        ProductResponse(catalogService.products())
 
     @GetMapping("/GetProductCategory")
-    fun productGroups(): ProductGroupResponse = ProductGroupResponse(catalogService.productGroups())
+    fun productGroups(): ProductGroupResponse =
+        ProductGroupResponse(catalogService.productGroups())
 
     @GetMapping("/GetListDiscounts")
-    fun discounts(@RequestParam("ProductID") productId: String): DiscountResponse =
+    fun discounts(
+        @RequestParam("ProductID") productId: String
+    ): DiscountResponse =
         DiscountResponse(catalogService.discounts(productId))
 }

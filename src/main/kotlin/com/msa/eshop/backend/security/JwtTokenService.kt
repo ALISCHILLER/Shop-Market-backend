@@ -21,17 +21,17 @@ class JwtTokenService(
     fun generateToken(customer: Customer): String {
         val now = Instant.now()
 
-        val header = mapOf(
-            "alg" to "HS256",
-            "typ" to "JWT"
+        val header = JwtHeader(
+            alg = JWT_ALGORITHM,
+            typ = JWT_TYPE
         )
 
-        val payload = mapOf(
-            "sub" to customer.customerCode,
-            "uid" to customer.id.toString(),
-            "role" to customer.role.uppercase(),
-            "iat" to now.epochSecond,
-            "exp" to now.plusSeconds(jwtProperties.expirationMinutes * 60).epochSecond
+        val payload = JwtPayload(
+            sub = customer.customerCode,
+            uid = requireNotNull(customer.id).toString(),
+            role = customer.role.uppercase(),
+            iat = now.epochSecond,
+            exp = now.plusSeconds(jwtProperties.expirationMinutes * 60).epochSecond
         )
 
         val headerPart = encodeJson(header)
@@ -48,21 +48,22 @@ class JwtTokenService(
             if (parts.size != 3) return null
 
             val signingInput = "${parts[0]}.${parts[1]}"
-            val expectedSignature = sign(signingInput)
 
-            if (!MessageDigest.isEqual(expectedSignature.toByteArray(), parts[2].toByteArray())) {
+            val expectedSignatureBytes = signToBytes(signingInput)
+            val actualSignatureBytes = decoder.decode(parts[2])
+
+            if (!MessageDigest.isEqual(expectedSignatureBytes, actualSignatureBytes)) {
                 return null
             }
 
             val payloadBytes = decoder.decode(parts[1])
-            val payload = objectMapper.readValue(payloadBytes, Map::class.java)
+            val payload = objectMapper.readValue(payloadBytes, JwtPayload::class.java)
 
-            val exp = (payload["exp"] as? Number)?.toLong() ?: return null
-            if (Instant.now().epochSecond >= exp) return null
+            if (Instant.now().epochSecond >= payload.exp) return null
 
-            val subject = payload["sub"]?.toString()?.takeIf { it.isNotBlank() } ?: return null
-            val userId = payload["uid"]?.toString()?.takeIf { it.isNotBlank() } ?: return null
-            val role = payload["role"]?.toString()?.uppercase()?.removePrefix("ROLE_") ?: "CUSTOMER"
+            val subject = payload.sub.takeIf { it.isNotBlank() } ?: return null
+            val userId = payload.uid.takeIf { it.isNotBlank() } ?: return null
+            val role = payload.role.uppercase().removePrefix("ROLE_").ifBlank { "CUSTOMER" }
 
             JwtClaims(
                 subject = subject,
@@ -75,12 +76,20 @@ class JwtTokenService(
     private fun encodeJson(value: Any): String =
         encoder.encodeToString(objectMapper.writeValueAsBytes(value))
 
-    private fun sign(input: String): String {
+    private fun sign(input: String): String =
+        encoder.encodeToString(signToBytes(input))
+
+    private fun signToBytes(input: String): ByteArray {
         val mac = Mac.getInstance("HmacSHA256")
         val key = SecretKeySpec(jwtProperties.secret.toByteArray(Charsets.UTF_8), "HmacSHA256")
         mac.init(key)
 
-        return encoder.encodeToString(mac.doFinal(input.toByteArray(Charsets.UTF_8)))
+        return mac.doFinal(input.toByteArray(Charsets.UTF_8))
+    }
+
+    private companion object {
+        const val JWT_ALGORITHM = "HS256"
+        const val JWT_TYPE = "JWT"
     }
 }
 
@@ -88,4 +97,17 @@ data class JwtClaims(
     val subject: String,
     val userId: String,
     val role: String
+)
+
+private data class JwtHeader(
+    val alg: String,
+    val typ: String
+)
+
+private data class JwtPayload(
+    val sub: String = "",
+    val uid: String = "",
+    val role: String = "CUSTOMER",
+    val iat: Long = 0,
+    val exp: Long = 0
 )

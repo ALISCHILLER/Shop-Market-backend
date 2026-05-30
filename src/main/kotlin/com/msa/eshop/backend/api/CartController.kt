@@ -2,7 +2,6 @@ package com.msa.eshop.backend.api
 
 import com.msa.eshop.backend.common.InsertCartModelRequest
 import com.msa.eshop.backend.common.InsertCartModelResponse
-import com.msa.eshop.backend.common.OrderAddressResultModel
 import com.msa.eshop.backend.common.PaymentTermResponse
 import com.msa.eshop.backend.common.ReportCartDetailsResponse
 import com.msa.eshop.backend.common.ReportHistoryCustomerModelRequest
