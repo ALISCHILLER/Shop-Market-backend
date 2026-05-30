@@ -1,4 +1,4 @@
-package com.msa.eshop.backend.common
+package com.msa.eshop.backend.common.dtos
 
 data class PageMetaDto(
     val page: Int,

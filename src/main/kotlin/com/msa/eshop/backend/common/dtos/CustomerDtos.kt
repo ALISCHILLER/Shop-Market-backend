@@ -1,4 +1,4 @@
-package com.msa.eshop.backend.common
+package com.msa.eshop.backend.common.dtos
 
 import jakarta.validation.constraints.NotBlank
 
