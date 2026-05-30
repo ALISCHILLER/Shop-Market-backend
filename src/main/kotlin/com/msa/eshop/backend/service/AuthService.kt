@@ -44,14 +44,29 @@ class AuthService(
     @Transactional
     fun changePassword(request: ChangePasswordRequest): Boolean {
         val customer = currentUserService.requireCustomer()
-        if (!passwordEncoder.matches(request.oldPassword, customer.passwordHash)) {
+
+        val oldPassword = request.oldPassword.trim()
+        val newPassword = request.newPassword.trim()
+
+        if (oldPassword.isBlank() || newPassword.isBlank()) {
+            throw BadRequestException("رمز عبور فعلی و جدید الزامی است")
+        }
+
+        if (!passwordEncoder.matches(oldPassword, customer.passwordHash)) {
             throw BadRequestException("رمز عبور فعلی اشتباه است")
         }
-        if (request.newPassword.length < 6) {
+
+        if (newPassword.length < 6) {
             throw BadRequestException("رمز عبور جدید باید حداقل ۶ کاراکتر باشد")
         }
-        customer.passwordHash = passwordEncoder.encode(request.newPassword)
+
+        if (oldPassword == newPassword) {
+            throw BadRequestException("رمز عبور جدید نباید با رمز عبور قبلی یکسان باشد")
+        }
+
+        customer.passwordHash = passwordEncoder.encode(newPassword)
         customer.salt = "bcrypt"
+
         customerRepository.save(customer)
         return true
     }

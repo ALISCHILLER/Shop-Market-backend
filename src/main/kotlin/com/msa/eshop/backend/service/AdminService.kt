@@ -38,7 +38,13 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
-
+import com.msa.eshop.backend.common.cleanOrNull
+import com.msa.eshop.backend.common.cleanRequired
+import com.msa.eshop.backend.common.requireMin
+import com.msa.eshop.backend.common.requirePercent
+import com.msa.eshop.backend.common.toUuidOrBadRequest
+import com.msa.eshop.backend.common.validateGeoPair
+import com.msa.eshop.backend.domain.CustomerRole
 @Service
 class AdminService(
     private val customerRepository: CustomerRepository,
@@ -67,23 +73,32 @@ class AdminService(
 
     @Transactional
     fun createCustomer(request: UpsertCustomerRequest): UserDto {
-        val customerCode = request.customerCode.trim()
+        val customerCode = request.customerCode.cleanRequired("کد مشتری الزامی است")
+        val customerName = request.customerName.cleanRequired("نام مشتری الزامی است")
+
         if (customerRepository.existsByCustomerCode(customerCode)) {
             throw BadRequestException("کد مشتری قبلاً ثبت شده است")
         }
 
-        val rawPassword = request.password?.trim()?.takeIf { it.isNotBlank() } ?: "123456"
+        val rawPassword = request.password
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: "123456"
+
+        if (rawPassword.length < 6) {
+            throw BadRequestException("رمز عبور باید حداقل ۶ کاراکتر باشد")
+        }
 
         val customer = Customer(
             customerCode = customerCode,
-            customerName = request.customerName.trim(),
-            mobile = request.mobile.clean(),
-            phone = request.phone.clean(),
-            center = request.center.clean(),
-            nationalCode = request.nationalCode.clean(),
+            customerName = customerName,
+            mobile = request.mobile.cleanOrNull(),
+            phone = request.phone.cleanOrNull(),
+            center = request.center.cleanOrNull(),
+            nationalCode = request.nationalCode.cleanOrNull(),
             passwordHash = passwordEncoder.encode(rawPassword),
             salt = "bcrypt",
-            role = normalizeRole(request.role),
+            role = CustomerRole.normalize(request.role).name,
             enabled = request.enabled
         )
 
@@ -95,27 +110,33 @@ class AdminService(
         val customer = customerRepository.findById(id)
             .orElseThrow { NotFoundException("مشتری پیدا نشد") }
 
-        val customerCode = request.customerCode.trim()
+        val customerCode = request.customerCode.cleanRequired("کد مشتری الزامی است")
+        val customerName = request.customerName.cleanRequired("نام مشتری الزامی است")
+
         if (customerRepository.existsByCustomerCodeAndIdNot(customerCode, id)) {
             throw BadRequestException("کد مشتری قبلاً برای مشتری دیگری ثبت شده است")
         }
 
         customer.customerCode = customerCode
-        customer.customerName = request.customerName.trim()
-        customer.mobile = request.mobile.clean()
-        customer.phone = request.phone.clean()
-        customer.center = request.center.clean()
-        customer.nationalCode = request.nationalCode.clean()
-        customer.role = normalizeRole(request.role)
+        customer.customerName = customerName
+        customer.mobile = request.mobile.cleanOrNull()
+        customer.phone = request.phone.cleanOrNull()
+        customer.center = request.center.cleanOrNull()
+        customer.nationalCode = request.nationalCode.cleanOrNull()
+        customer.role = CustomerRole.normalize(request.role).name
         customer.enabled = request.enabled
 
-        if (!request.password.isNullOrBlank()) {
-            if (request.password.trim().length < 6) {
-                throw BadRequestException("رمز عبور باید حداقل ۶ کاراکتر باشد")
+        request.password
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { newPassword ->
+                if (newPassword.length < 6) {
+                    throw BadRequestException("رمز عبور باید حداقل ۶ کاراکتر باشد")
+                }
+
+                customer.passwordHash = passwordEncoder.encode(newPassword)
+                customer.salt = "bcrypt"
             }
-            customer.passwordHash = passwordEncoder.encode(request.password.trim())
-            customer.salt = "bcrypt"
-        }
 
         return customerRepository.save(customer).toDto()
     }
@@ -144,27 +165,33 @@ class AdminService(
 
     @Transactional
     fun createAddress(request: UpsertAddressRequest): OrderAddressDto {
-        val customerId = request.customerId.toUuid("شناسه مشتری معتبر نیست")
+        val customerId = request.customerId.toUuidOrBadRequest("شناسه مشتری معتبر نیست")
+
         val customer = customerRepository.findById(customerId)
             .orElseThrow { NotFoundException("مشتری پیدا نشد") }
+
+        val latitude = request.latitude ?: request.lat
+        val longitude = request.longitude ?: request.lng
+
+        validateGeoPair(latitude, longitude)
 
         val isFirstAddress = addressRepository.countByCustomerId(customerId) == 0L
         val shouldBeDefault = request.isDefault ?: isFirstAddress
 
-        if (shouldBeDefault) clearDefaultAddress(customerId, exceptId = null)
+        if (shouldBeDefault) {
+            clearDefaultAddress(customerId, exceptId = null)
+        }
 
         val address = CustomerAddress(
             customer = customer,
             centerName = request.centerName.trim(),
-            customerAddress = request.customerAddress.trim(),
+            customerAddress = request.customerAddress.cleanRequired("آدرس الزامی است"),
             customerMobile = request.customerMobile.trim(),
             customerPhone = request.customerPhone.trim(),
-            latitude = request.resolvedLatitude(),
-            longitude = request.resolvedLongitude(),
+            latitude = latitude,
+            longitude = longitude,
             isDefault = shouldBeDefault
         )
-
-        validateGeo(address.latitude, address.longitude)
 
         return addressRepository.save(address).toDto()
     }
@@ -174,25 +201,41 @@ class AdminService(
         val address = addressRepository.findById(id)
             .orElseThrow { NotFoundException("آدرس پیدا نشد") }
 
-        val customerId = request.customerId.toUuid("شناسه مشتری معتبر نیست")
-        val customer = customerRepository.findById(customerId)
+        val oldCustomerId = address.customer?.id
+
+        val newCustomerId = request.customerId.toUuidOrBadRequest("شناسه مشتری معتبر نیست")
+        val customer = customerRepository.findById(newCustomerId)
             .orElseThrow { NotFoundException("مشتری پیدا نشد") }
 
+        val latitude = request.latitude ?: request.lat
+        val longitude = request.longitude ?: request.lng
+
+        validateGeoPair(latitude, longitude)
+
         val shouldBeDefault = request.isDefault ?: address.isDefault
-        if (shouldBeDefault) clearDefaultAddress(customerId, exceptId = id)
+
+        if (shouldBeDefault) {
+            clearDefaultAddress(newCustomerId, exceptId = id)
+        }
 
         address.customer = customer
         address.centerName = request.centerName.trim()
-        address.customerAddress = request.customerAddress.trim()
+        address.customerAddress = request.customerAddress.cleanRequired("آدرس الزامی است")
         address.customerMobile = request.customerMobile.trim()
         address.customerPhone = request.customerPhone.trim()
-        address.latitude = request.resolvedLatitude()
-        address.longitude = request.resolvedLongitude()
+        address.latitude = latitude
+        address.longitude = longitude
         address.isDefault = shouldBeDefault
 
-        validateGeo(address.latitude, address.longitude)
+        val saved = addressRepository.save(address)
 
-        return addressRepository.save(address).toDto()
+        if (oldCustomerId != null && oldCustomerId != newCustomerId) {
+            ensureOneDefaultAddress(oldCustomerId)
+        }
+
+        ensureOneDefaultAddress(newCustomerId)
+
+        return saved.toDto()
     }
 
     @Transactional
@@ -283,9 +326,19 @@ class AdminService(
 
     @Transactional
     fun createDiscount(request: UpsertDiscountRequest): DiscountResultDto {
-        validateDiscountRequest(request)
+        request.discountPercent.requirePercent()
+        request.fromNumber.requireMin(1, "حداقل تعداد معتبر نیست")
+        request.endNumber.requireMin(request.fromNumber, "حداکثر تعداد باید بزرگ‌تر یا مساوی حداقل تعداد باشد")
 
         val product = request.productId.findProduct()
+        val productId = requireNotNull(product.id)
+
+        validateDiscountOverlap(
+            productId = productId,
+            fromNumber = request.fromNumber,
+            endNumber = request.endNumber
+        )
+
         val discount = Discount(
             product = product,
             discountPercent = request.discountPercent,
@@ -298,12 +351,24 @@ class AdminService(
 
     @Transactional
     fun updateDiscount(id: UUID, request: UpsertDiscountRequest): DiscountResultDto {
-        validateDiscountRequest(request)
+        request.discountPercent.requirePercent()
+        request.fromNumber.requireMin(1, "حداقل تعداد معتبر نیست")
+        request.endNumber.requireMin(request.fromNumber, "حداکثر تعداد باید بزرگ‌تر یا مساوی حداقل تعداد باشد")
 
         val discount = discountRepository.findById(id)
             .orElseThrow { NotFoundException("تخفیف پیدا نشد") }
 
-        discount.product = request.productId.findProduct()
+        val product = request.productId.findProduct()
+        val productId = requireNotNull(product.id)
+
+        validateDiscountOverlap(
+            productId = productId,
+            fromNumber = request.fromNumber,
+            endNumber = request.endNumber,
+            exceptDiscountId = id
+        )
+
+        discount.product = product
         discount.discountPercent = request.discountPercent
         discount.fromNumber = request.fromNumber
         discount.endNumber = request.endNumber
@@ -501,5 +566,34 @@ class AdminService(
     ) {
         if (!repository.existsById(id)) throw NotFoundException(message)
         repository.deleteById(id)
+    }
+
+    private fun ensureOneDefaultAddress(customerId: UUID) {
+        val addresses = addressRepository.findByCustomerId(customerId)
+        if (addresses.isEmpty()) return
+
+        if (addresses.none { it.isDefault }) {
+            val selected = addresses.sortedBy { it.centerName }.first()
+            selected.isDefault = true
+            addressRepository.save(selected)
+        }
+    }
+
+    private fun validateDiscountOverlap(
+        productId: UUID,
+        fromNumber: Int,
+        endNumber: Int,
+        exceptDiscountId: UUID? = null
+    ) {
+        val hasOverlap = discountRepository.findByProductId(productId)
+            .asSequence()
+            .filter { it.id != exceptDiscountId }
+            .any { existing ->
+                fromNumber <= existing.endNumber && endNumber >= existing.fromNumber
+            }
+
+        if (hasOverlap) {
+            throw BadRequestException("بازه تخفیف با تخفیف دیگری برای همین کالا تداخل دارد")
+        }
     }
 }
