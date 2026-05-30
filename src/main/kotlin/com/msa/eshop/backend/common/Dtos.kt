@@ -359,7 +359,9 @@ data class AdminCartSummaryDto(
 )
 
 data class UpdateCartStatusRequest(
+    @field:NotBlank(message = "وضعیت سفارش الزامی است")
     val status: String,
+
     val color: String? = null
 )
 data class AdminCustomerSearchRequest(
