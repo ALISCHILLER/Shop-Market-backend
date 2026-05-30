@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.api.admin
 
-import com.msa.eshop.backend.common.BaseResponse
-import com.msa.eshop.backend.common.PaymentTermDto
-import com.msa.eshop.backend.common.UpsertPaymentTermRequest
+import com.msa.eshop.backend.common.dtos.BaseResponse
+import com.msa.eshop.backend.common.dtos.PaymentTermDto
+import com.msa.eshop.backend.common.dtos.UpsertPaymentTermRequest
 import com.msa.eshop.backend.service.admin.AdminPaymentTermService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping

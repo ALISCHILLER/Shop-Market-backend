@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.api.admin
 
-import com.msa.eshop.backend.common.BaseResponse
-import com.msa.eshop.backend.common.OrderAddressDto
-import com.msa.eshop.backend.common.UpsertAddressRequest
+import com.msa.eshop.backend.common.dtos.BaseResponse
+import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.UpsertAddressRequest
 import com.msa.eshop.backend.service.admin.AdminAddressService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping

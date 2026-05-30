@@ -1,9 +1,9 @@
 package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.DiscountResultDto
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.common.UpsertDiscountRequest
+import com.msa.eshop.backend.common.dtos.UpsertDiscountRequest
 import com.msa.eshop.backend.common.requireMin
 import com.msa.eshop.backend.common.requirePercent
 import com.msa.eshop.backend.domain.Discount

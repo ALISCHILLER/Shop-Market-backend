@@ -1,13 +1,13 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.InsertCartModelRequest
-import com.msa.eshop.backend.common.InsertCartModelResponse
-import com.msa.eshop.backend.common.PaymentTermResponse
-import com.msa.eshop.backend.common.ReportCartDetailsResponse
-import com.msa.eshop.backend.common.ReportHistoryCustomerModelRequest
-import com.msa.eshop.backend.common.ReportHistoryCustomerResponse
-import com.msa.eshop.backend.common.SimulateModelRequest
-import com.msa.eshop.backend.common.SimulateResultModel
+import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
+import com.msa.eshop.backend.common.dtos.InsertCartModelResponse
+import com.msa.eshop.backend.common.dtos.PaymentTermResponse
+import com.msa.eshop.backend.common.dtos.ReportCartDetailsResponse
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerModelRequest
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerResponse
+import com.msa.eshop.backend.common.dtos.SimulateModelRequest
+import com.msa.eshop.backend.common.dtos.SimulateResultModel
 import com.msa.eshop.backend.service.CartService
 import jakarta.validation.Valid
 import org.springframework.validation.annotation.Validated

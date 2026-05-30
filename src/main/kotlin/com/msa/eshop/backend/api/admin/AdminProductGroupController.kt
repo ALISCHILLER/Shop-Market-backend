@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.api.admin
 
-import com.msa.eshop.backend.common.BaseResponse
-import com.msa.eshop.backend.common.ProductGroupDto
-import com.msa.eshop.backend.common.UpsertProductGroupRequest
+import com.msa.eshop.backend.common.dtos.BaseResponse
+import com.msa.eshop.backend.common.dtos.ProductGroupDto
+import com.msa.eshop.backend.common.dtos.UpsertProductGroupRequest
 import com.msa.eshop.backend.service.admin.AdminProductGroupService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping

@@ -1,7 +1,7 @@
 package com.msa.eshop.backend.service
 
 import com.msa.eshop.backend.common.Money
-import com.msa.eshop.backend.common.SimulateDto
+import com.msa.eshop.backend.common.dtos.SimulateDto
 import com.msa.eshop.backend.common.requirePercent
 import com.msa.eshop.backend.domain.Discount
 import com.msa.eshop.backend.domain.DiscountRepository

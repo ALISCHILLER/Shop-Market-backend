@@ -1,10 +1,10 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.ChangePasswordRequest
-import com.msa.eshop.backend.common.ChangePasswordResponse
-import com.msa.eshop.backend.common.TokenRequest
-import com.msa.eshop.backend.common.TokenResponse
-import com.msa.eshop.backend.common.UserResponse
+import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
+import com.msa.eshop.backend.common.dtos.ChangePasswordResponse
+import com.msa.eshop.backend.common.dtos.TokenRequest
+import com.msa.eshop.backend.common.dtos.TokenResponse
+import com.msa.eshop.backend.common.dtos.UserResponse
 import com.msa.eshop.backend.service.AuthService
 import com.msa.eshop.backend.service.CurrentUserService
 import com.msa.eshop.backend.service.toDto

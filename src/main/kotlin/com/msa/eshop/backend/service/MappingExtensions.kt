@@ -1,14 +1,14 @@
 package com.msa.eshop.backend.service
 
-import com.msa.eshop.backend.common.BannerDto
-import com.msa.eshop.backend.common.DiscountResultDto
-import com.msa.eshop.backend.common.OrderAddressDto
-import com.msa.eshop.backend.common.PaymentTermDto
-import com.msa.eshop.backend.common.ProductDto
-import com.msa.eshop.backend.common.ProductGroupDto
-import com.msa.eshop.backend.common.ReportCartDetailsDto
-import com.msa.eshop.backend.common.ReportHistoryCustomerDto
-import com.msa.eshop.backend.common.UserDto
+import com.msa.eshop.backend.common.dtos.BannerDto
+import com.msa.eshop.backend.common.dtos.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.PaymentTermDto
+import com.msa.eshop.backend.common.dtos.ProductDto
+import com.msa.eshop.backend.common.dtos.ProductGroupDto
+import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerDto
+import com.msa.eshop.backend.common.dtos.UserDto
 import com.msa.eshop.backend.domain.Banner
 import com.msa.eshop.backend.domain.Cart
 import com.msa.eshop.backend.domain.CartItem

@@ -2,9 +2,9 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.common.PageResponseDto
-import com.msa.eshop.backend.common.ProductDto
-import com.msa.eshop.backend.common.UpsertProductRequest
+import com.msa.eshop.backend.common.dtos.PageResponseDto
+import com.msa.eshop.backend.common.dtos.ProductDto
+import com.msa.eshop.backend.common.dtos.UpsertProductRequest
 import com.msa.eshop.backend.common.cleanOrNull
 import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.toPageResponse

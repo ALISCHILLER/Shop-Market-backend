@@ -1,13 +1,13 @@
 package com.msa.eshop.backend.service
 
-import com.msa.eshop.backend.common.InsertCartModelRequest
-import com.msa.eshop.backend.common.OrderAddressDto
-import com.msa.eshop.backend.common.PaymentTermDto
-import com.msa.eshop.backend.common.ReportCartDetailsDto
-import com.msa.eshop.backend.common.ReportHistoryCustomerDto
-import com.msa.eshop.backend.common.ReportHistoryCustomerModelRequest
-import com.msa.eshop.backend.common.SimulateDto
-import com.msa.eshop.backend.common.SimulateModelRequest
+import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
+import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.PaymentTermDto
+import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerDto
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerModelRequest
+import com.msa.eshop.backend.common.dtos.SimulateDto
+import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import com.msa.eshop.backend.service.cart.CartCheckoutService
 import com.msa.eshop.backend.service.cart.CartQueryService
 import org.springframework.stereotype.Service

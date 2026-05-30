@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.InsertCartModelRequest
-import com.msa.eshop.backend.common.SimulateModelRequest
+import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
+import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import org.springframework.stereotype.Component
 
 @Component

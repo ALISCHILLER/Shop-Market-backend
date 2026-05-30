@@ -1,6 +1,7 @@
 package com.msa.eshop.backend.service.admin
 
-import com.msa.eshop.backend.common.DashboardDto
+
+import com.msa.eshop.backend.common.dtos.DashboardDto
 import com.msa.eshop.backend.domain.CartRepository
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.domain.ProductCategoryRepository

@@ -1,6 +1,6 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.BannerResponse
+import com.msa.eshop.backend.common.dtos.BannerResponse
 import com.msa.eshop.backend.service.CatalogService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping

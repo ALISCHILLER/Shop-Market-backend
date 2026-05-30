@@ -2,9 +2,9 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.common.OrderAddressDto
-import com.msa.eshop.backend.common.UpsertAddressRequest
 import com.msa.eshop.backend.common.cleanRequired
+import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.UpsertAddressRequest
 import com.msa.eshop.backend.common.toUuidOrBadRequest
 import com.msa.eshop.backend.common.validateGeoPair
 import com.msa.eshop.backend.domain.CartRepository

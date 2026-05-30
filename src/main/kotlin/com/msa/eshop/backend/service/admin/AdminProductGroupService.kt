@@ -2,8 +2,8 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.common.ProductGroupDto
-import com.msa.eshop.backend.common.UpsertProductGroupRequest
+import com.msa.eshop.backend.common.dtos.ProductGroupDto
+import com.msa.eshop.backend.common.dtos.UpsertProductGroupRequest
 import com.msa.eshop.backend.common.cleanOrNull
 import com.msa.eshop.backend.domain.ProductCategory
 import com.msa.eshop.backend.domain.ProductCategoryRepository

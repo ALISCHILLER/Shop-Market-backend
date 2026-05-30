@@ -1,5 +1,6 @@
 package com.msa.eshop.backend.common
 
+import com.msa.eshop.backend.common.dtos.BaseResponse
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException

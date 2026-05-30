@@ -1,10 +1,9 @@
 package com.msa.eshop.backend.service
 
-import com.msa.eshop.backend.common.BannerDto
-import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.DiscountResultDto
-import com.msa.eshop.backend.common.ProductDto
-import com.msa.eshop.backend.common.ProductGroupDto
+import com.msa.eshop.backend.common.dtos.BannerDto
+import com.msa.eshop.backend.common.dtos.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.ProductDto
+import com.msa.eshop.backend.common.dtos.ProductGroupDto
 import com.msa.eshop.backend.domain.BannerRepository
 import com.msa.eshop.backend.domain.DiscountRepository
 import com.msa.eshop.backend.domain.ProductCategoryRepository

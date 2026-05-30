@@ -1,6 +1,6 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.OrderAddressResultModel
+import com.msa.eshop.backend.common.dtos.OrderAddressResultModel
 import com.msa.eshop.backend.service.CartService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping

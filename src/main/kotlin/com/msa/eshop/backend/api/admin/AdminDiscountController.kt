@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.api.admin
 
-import com.msa.eshop.backend.common.BaseResponse
-import com.msa.eshop.backend.common.DiscountResultDto
-import com.msa.eshop.backend.common.UpsertDiscountRequest
+import com.msa.eshop.backend.common.dtos.BaseResponse
+import com.msa.eshop.backend.common.dtos.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.UpsertDiscountRequest
 import com.msa.eshop.backend.service.admin.AdminDiscountService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping

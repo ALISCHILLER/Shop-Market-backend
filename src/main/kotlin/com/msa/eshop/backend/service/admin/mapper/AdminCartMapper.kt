@@ -1,7 +1,8 @@
 package com.msa.eshop.backend.service.admin.mapper
 
-import com.msa.eshop.backend.common.AdminCartSummaryDto
-import com.msa.eshop.backend.common.ReportCartDetailsDto
+
+import com.msa.eshop.backend.common.dtos.AdminCartSummaryDto
+import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
 import com.msa.eshop.backend.domain.Cart
 import com.msa.eshop.backend.domain.CartItem
 import com.msa.eshop.backend.domain.CartStatus

@@ -2,8 +2,8 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.common.PaymentTermDto
-import com.msa.eshop.backend.common.UpsertPaymentTermRequest
+import com.msa.eshop.backend.common.dtos.PaymentTermDto
+import com.msa.eshop.backend.common.dtos.UpsertPaymentTermRequest
 import com.msa.eshop.backend.common.cleanRequired
 import com.msa.eshop.backend.common.requirePercent
 import com.msa.eshop.backend.domain.CartRepository
