@@ -165,31 +165,6 @@ open class Banner(
 )
 
 @Entity
-@Table(name = "customer_addresses")
-open class CustomerAddress(
-    @Id
-    @UuidGenerator
-    @Column(columnDefinition = "uuid")
-    open var id: UUID? = null,
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
-    open var customer: Customer? = null,
-
-    @Column(name = "center_name", nullable = false)
-    open var centerName: String = "",
-
-    @Column(name = "customer_address", nullable = false)
-    open var customerAddress: String = "",
-
-    @Column(name = "customer_mobile", nullable = false)
-    open var customerMobile: String = "",
-
-    @Column(name = "customer_phone", nullable = false)
-    open var customerPhone: String = ""
-)
-
-@Entity
 @Table(name = "payment_terms")
 open class PaymentTerm(
     @Id
@@ -317,4 +292,38 @@ open class CartItem(
 
     @Column(name = "total", nullable = false)
     open var total: Int = 0
+)
+
+@Entity
+@Table(name = "customer_addresses")
+open class CustomerAddress(
+    @Id
+    @UuidGenerator
+    @Column(columnDefinition = "uuid")
+    open var id: UUID? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    open var customer: Customer? = null,
+
+    @Column(name = "center_name", nullable = false)
+    open var centerName: String = "",
+
+    @Column(name = "customer_address", nullable = false)
+    open var customerAddress: String = "",
+
+    @Column(name = "customer_mobile", nullable = false)
+    open var customerMobile: String = "",
+
+    @Column(name = "customer_phone", nullable = false)
+    open var customerPhone: String = "",
+
+    @Column(name = "latitude")
+    open var latitude: Double? = null,
+
+    @Column(name = "longitude")
+    open var longitude: Double? = null,
+
+    @Column(name = "is_default", nullable = false)
+    open var isDefault: Boolean = false
 )

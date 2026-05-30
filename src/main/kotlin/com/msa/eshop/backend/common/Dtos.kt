@@ -1,17 +1,19 @@
 package com.msa.eshop.backend.common
 
+import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 
 data class TokenRequest(
-    val customerCode: String?,
-    val password: String?
+    val customerCode: String? = null,
+    val password: String? = null
 )
 
 data class ChangePasswordRequest(
     @field:NotBlank(message = "رمز عبور فعلی را وارد کنید")
     val oldPassword: String,
+
     @field:NotBlank(message = "رمز عبور جدید را وارد کنید")
     val newPassword: String
 )
@@ -19,6 +21,7 @@ data class ChangePasswordRequest(
 data class SimulateModelRequest(
     @field:NotNull(message = "کد کالا الزامی است")
     val productCode: Int,
+
     @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
     val quantity: Int
 )
@@ -26,18 +29,21 @@ data class SimulateModelRequest(
 data class InsertCartModelRequest(
     @field:NotBlank(message = "شناسه آدرس الزامی است")
     val customerAddressId: String,
+
     @field:NotBlank(message = "شناسه روش پرداخت الزامی است")
     val paymentTermId: String,
+
     @field:NotNull(message = "کد کالا الزامی است")
     val productCode: Int,
+
     @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
     val quantity: Int
 )
 
 data class ReportHistoryCustomerModelRequest(
-    val customerId: String,
-    val fromDate: String,
-    val endDate: String
+    val customerId: String = "",
+    val fromDate: String = "",
+    val endDate: String = ""
 )
 
 data class UserDto(
@@ -49,7 +55,11 @@ data class UserDto(
     val center: String?,
     val nationalCode: String?,
     val password: String? = null,
-    val salt: String? = null
+    val salt: String? = null,
+
+    // Required by KMM admin/profile UI
+    val role: String = "CUSTOMER",
+    val enabled: Boolean = true
 )
 
 data class ProductDto(
@@ -67,6 +77,10 @@ data class ProductDto(
     val productGroupCode: Int,
     val price: Int,
     val isDiscounts: Boolean,
+
+    // Optional; client can ignore it, but backend should expose real value.
+    val isTax: Boolean = true,
+
     val productImage: String?
 )
 
@@ -96,13 +110,30 @@ data class OrderAddressDto(
     val customerAddress: String,
     val customerMobile: String,
     val customerPhone: String,
-    val id: String
+    val id: String,
+
+    // Required by KMM admin/edit/map flow
+    val customerId: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+
+    // Compatibility aliases; KMM supports both latitude/longitude and lat/lng.
+    val lat: Double? = latitude,
+    val lng: Double? = longitude,
+
+    val isDefault: Boolean = false
 )
 
 data class PaymentTermDto(
     val deadLine: Int,
     val id: String,
-    val name: String
+    val name: String,
+
+    // Required by KMM admin payment form
+    val immediateDiscountPercent: Int = 0,
+    val receiptDiscountPercent: Int = 0,
+    val chequeDiscountPercent: Int = 0,
+    val active: Boolean = true
 )
 
 data class SimulateDto(
@@ -121,7 +152,7 @@ data class SimulateDto(
     val fullNameKala2: String,
     val id: String,
     val isTax: Boolean,
-    val paymentTermId: Any?,
+    val paymentTermId: String?,
     val price: Int,
     val priceByDiscountPercent: Int,
     val priceByDiscountPercentAndTax: Int,
@@ -171,8 +202,10 @@ data class ReportCartDetailsDto(
 data class UpsertCustomerRequest(
     @field:NotBlank(message = "کد مشتری الزامی است")
     val customerCode: String,
+
     @field:NotBlank(message = "نام مشتری الزامی است")
     val customerName: String,
+
     val mobile: String? = null,
     val phone: String? = null,
     val center: String? = null,
@@ -185,15 +218,29 @@ data class UpsertCustomerRequest(
 data class UpsertAddressRequest(
     @field:NotBlank(message = "شناسه مشتری الزامی است")
     val customerId: String,
-    val centerName: String,
+
+    val centerName: String = "",
+
     @field:NotBlank(message = "آدرس الزامی است")
     val customerAddress: String,
-    val customerMobile: String,
-    val customerPhone: String
+
+    val customerMobile: String = "",
+    val customerPhone: String = "",
+
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+
+    // Compatibility aliases, useful if future clients send lat/lng.
+    val lat: Double? = null,
+    val lng: Double? = null,
+
+    val isDefault: Boolean? = null
 )
 
 data class UpsertProductGroupRequest(
+    @field:Min(value = 1, message = "کد دسته‌بندی معتبر نیست")
     val productCategoryCode: Int,
+
     val productCategoryName: String?,
     val productCategoryImage: String?,
     val productCategoryImageUnselect: String?
@@ -201,7 +248,10 @@ data class UpsertProductGroupRequest(
 
 data class UpsertProductRequest(
     val productName: String?,
+
+    @field:Min(value = 1, message = "کد کالا معتبر نیست")
     val productCode: Int,
+
     val fullNameKala1: String?,
     val unit1: String?,
     val unitid1: String?,
@@ -210,30 +260,60 @@ data class UpsertProductRequest(
     val unit2: String?,
     val convertFactor2: Int = 1,
     val unitid2: String?,
+
+    @field:Min(value = 1, message = "کد گروه کالا معتبر نیست")
     val productGroupCode: Int,
+
+    @field:Min(value = 0, message = "قیمت کالا معتبر نیست")
     val price: Int,
+
     val isDiscounts: Boolean = false,
+    val isTax: Boolean = true,
     val productImage: String?
 )
 
 data class UpsertDiscountRequest(
+    @field:NotBlank(message = "شناسه کالا الزامی است")
     val productId: String,
+
+    @field:Min(value = 0, message = "درصد تخفیف معتبر نیست")
+    @field:Max(value = 100, message = "درصد تخفیف معتبر نیست")
     val discountPercent: Int,
+
+    @field:Min(value = 1, message = "حداقل تعداد معتبر نیست")
     val fromNumber: Int,
+
+    @field:Min(value = 1, message = "حداکثر تعداد معتبر نیست")
     val endNumber: Int
 )
 
 data class UpsertBannerRequest(
+    @field:NotBlank(message = "تصویر بنر الزامی است")
     val bannerImage: String,
+
+    @field:NotBlank(message = "نام بنر الزامی است")
     val bannerName: String
 )
 
 data class UpsertPaymentTermRequest(
+    @field:NotBlank(message = "نام روش پرداخت الزامی است")
     val name: String,
+
+    @field:Min(value = 0, message = "مهلت پرداخت معتبر نیست")
     val deadLine: Int,
+
+    @field:Min(value = 0, message = "درصد تخفیف معتبر نیست")
+    @field:Max(value = 100, message = "درصد تخفیف معتبر نیست")
     val immediateDiscountPercent: Int = 0,
+
+    @field:Min(value = 0, message = "درصد تخفیف معتبر نیست")
+    @field:Max(value = 100, message = "درصد تخفیف معتبر نیست")
     val receiptDiscountPercent: Int = 0,
+
+    @field:Min(value = 0, message = "درصد تخفیف معتبر نیست")
+    @field:Max(value = 100, message = "درصد تخفیف معتبر نیست")
     val chequeDiscountPercent: Int = 0,
+
     val active: Boolean = true
 )
 

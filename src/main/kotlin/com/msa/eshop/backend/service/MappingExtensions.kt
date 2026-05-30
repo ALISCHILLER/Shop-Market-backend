@@ -28,7 +28,9 @@ fun Customer.toDto(): UserDto = UserDto(
     center = center,
     nationalCode = nationalCode,
     password = null,
-    salt = null
+    salt = null,
+    role = role.uppercase(),
+    enabled = enabled
 )
 
 fun Product.toDto(): ProductDto = ProductDto(
@@ -46,6 +48,7 @@ fun Product.toDto(): ProductDto = ProductDto(
     productGroupCode = productGroupCode,
     price = price,
     isDiscounts = isDiscounts,
+    isTax = isTax,
     productImage = productImage
 )
 
@@ -64,7 +67,7 @@ fun Banner.toDto(): BannerDto = BannerDto(
 
 fun Discount.toDto(): DiscountResultDto = DiscountResultDto(
     id = requireNotNull(id).toString(),
-    productId = product?.id.toString(),
+    productId = requireNotNull(product?.id).toString(),
     discountPercent = discountPercent,
     fromNumber = fromNumber,
     endNumber = endNumber
@@ -72,16 +75,24 @@ fun Discount.toDto(): DiscountResultDto = DiscountResultDto(
 
 fun CustomerAddress.toDto(): OrderAddressDto = OrderAddressDto(
     id = requireNotNull(id).toString(),
+    customerId = customer?.id?.toString(),
     centerName = centerName,
     customerAddress = customerAddress,
     customerMobile = customerMobile,
-    customerPhone = customerPhone
+    customerPhone = customerPhone,
+    latitude = latitude,
+    longitude = longitude,
+    isDefault = isDefault
 )
 
 fun PaymentTerm.toDto(): PaymentTermDto = PaymentTermDto(
     id = requireNotNull(id).toString(),
     name = name,
-    deadLine = deadLine
+    deadLine = deadLine,
+    immediateDiscountPercent = immediateDiscountPercent,
+    receiptDiscountPercent = receiptDiscountPercent,
+    chequeDiscountPercent = chequeDiscountPercent,
+    active = active
 )
 
 fun Cart.toHistoryDto(): ReportHistoryCustomerDto = ReportHistoryCustomerDto(

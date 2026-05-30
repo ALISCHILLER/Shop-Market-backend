@@ -10,6 +10,7 @@ import java.util.UUID
 interface CustomerRepository : JpaRepository<Customer, UUID> {
     fun findByCustomerCode(customerCode: String): Customer?
     fun existsByCustomerCode(customerCode: String): Boolean
+    fun existsByCustomerCodeAndIdNot(customerCode: String, id: UUID): Boolean
 }
 
 interface ProductCategoryRepository : JpaRepository<ProductCategory, Int> {
@@ -18,6 +19,9 @@ interface ProductCategoryRepository : JpaRepository<ProductCategory, Int> {
 
 interface ProductRepository : JpaRepository<Product, UUID> {
     fun findByProductCode(productCode: Int): Product?
+    fun existsByProductCode(productCode: Int): Boolean
+    fun existsByProductCodeAndIdNot(productCode: Int, id: UUID): Boolean
+    fun countByProductGroupCode(productGroupCode: Int): Long
     fun findAllByOrderByProductNameAsc(): List<Product>
     fun findByProductGroupCodeOrderByProductNameAsc(productGroupCode: Int): List<Product>
 }
@@ -40,9 +44,12 @@ interface BannerRepository : JpaRepository<Banner, UUID> {
 interface CustomerAddressRepository : JpaRepository<CustomerAddress, UUID> {
     @EntityGraph(attributePaths = ["customer"])
     fun findByCustomerId(customerId: UUID): List<CustomerAddress>
+
+    fun countByCustomerId(customerId: UUID): Long
 }
 
 interface PaymentTermRepository : JpaRepository<PaymentTerm, UUID> {
+    fun findAllByOrderByDeadLineAscNameAsc(): List<PaymentTerm>
     fun findByActiveTrueOrderByDeadLineAsc(): List<PaymentTerm>
     fun findFirstByActiveTrueOrderByDeadLineAsc(): PaymentTerm?
 }
@@ -50,6 +57,10 @@ interface PaymentTermRepository : JpaRepository<PaymentTerm, UUID> {
 interface CartRepository : JpaRepository<Cart, UUID> {
     @EntityGraph(attributePaths = ["customer", "address", "paymentTerm", "items", "items.product"])
     fun findByCartCode(cartCode: Int): Cart?
+
+    fun countByCustomerId(customerId: UUID): Long
+    fun countByAddressId(addressId: UUID): Long
+    fun countByPaymentTermId(paymentTermId: UUID): Long
 
     @EntityGraph(attributePaths = ["customer", "address"])
     @Query(
@@ -69,4 +80,8 @@ interface CartRepository : JpaRepository<Cart, UUID> {
 
     @Query("select coalesce(sum(c.total), 0) from Cart c")
     fun revenue(): Long
+}
+
+interface CartItemRepository : JpaRepository<CartItem, UUID> {
+    fun countByProductId(productId: UUID): Long
 }

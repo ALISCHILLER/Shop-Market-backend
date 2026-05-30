@@ -30,7 +30,11 @@ class AuthService(
         val customer = customerRepository.findByCustomerCode(customerCode)
             ?: throw UnauthorizedException("کد مشتری یا رمز عبور اشتباه است")
 
-        if (!customer.enabled || !passwordEncoder.matches(password, customer.passwordHash)) {
+        if (!customer.enabled) {
+            throw UnauthorizedException("حساب کاربری غیرفعال است")
+        }
+
+        if (!passwordEncoder.matches(password, customer.passwordHash)) {
             throw UnauthorizedException("کد مشتری یا رمز عبور اشتباه است")
         }
 
