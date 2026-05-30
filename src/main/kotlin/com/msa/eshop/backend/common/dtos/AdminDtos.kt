@@ -19,13 +19,7 @@ data class AdminCartSummaryDto(
     val customerAddress: String,
     val paymentTermId: String?,
     val paymentTermName: String,
-
-    /*
-     * nullable گذاشته شده تا نسخه فعلی که هنوز cart.statusCode ندارد نشکند.
-     * اگر Entity را statusCode-based کردی، این را String غیر nullable کن.
-     */
-    val statusCode: String? = null,
-
+    val statusCode: String,
     val statusName: String,
     val statusColor: String,
     val salesDate: String,

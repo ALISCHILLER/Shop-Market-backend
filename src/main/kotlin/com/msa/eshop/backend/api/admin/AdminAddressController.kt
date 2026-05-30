@@ -1,6 +1,6 @@
 package com.msa.eshop.backend.api.admin
 
-import com.msa.eshop.backend.common.dtos.BaseResponse
+import com.msa.eshop.backend.common.BaseResponse
 import com.msa.eshop.backend.common.dtos.OrderAddressDto
 import com.msa.eshop.backend.common.dtos.UpsertAddressRequest
 import com.msa.eshop.backend.service.admin.AdminAddressService

@@ -1,6 +1,16 @@
-package com.msa.eshop.backend.common.dtos
+package com.msa.eshop.backend.common
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.msa.eshop.backend.common.dtos.BannerDto
+import com.msa.eshop.backend.common.dtos.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.PaymentTermDto
+import com.msa.eshop.backend.common.dtos.ProductDto
+import com.msa.eshop.backend.common.dtos.ProductGroupDto
+import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerDto
+import com.msa.eshop.backend.common.dtos.SimulateDto
+import com.msa.eshop.backend.common.dtos.UserDto
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
 data class BaseResponse<T>(

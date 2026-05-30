@@ -1,9 +1,9 @@
 package com.msa.eshop.backend.service
 
 import com.msa.eshop.backend.common.BadRequestException
+import com.msa.eshop.backend.common.TokenResponse
 import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
 import com.msa.eshop.backend.common.dtos.TokenRequest
-import com.msa.eshop.backend.common.dtos.TokenResponse
 import com.msa.eshop.backend.common.UnauthorizedException
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.security.JwtTokenService

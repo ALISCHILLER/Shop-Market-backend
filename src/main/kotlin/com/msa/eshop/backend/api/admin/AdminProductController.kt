@@ -1,6 +1,6 @@
 package com.msa.eshop.backend.api.admin
 
-import com.msa.eshop.backend.common.dtos.BaseResponse
+import com.msa.eshop.backend.common.BaseResponse
 import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.ProductDto
 import com.msa.eshop.backend.common.dtos.UpsertProductRequest

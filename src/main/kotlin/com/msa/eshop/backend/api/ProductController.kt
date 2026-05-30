@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.dtos.DiscountResponse
-import com.msa.eshop.backend.common.dtos.ProductGroupResponse
-import com.msa.eshop.backend.common.dtos.ProductResponse
+import com.msa.eshop.backend.common.DiscountResponse
+import com.msa.eshop.backend.common.ProductGroupResponse
+import com.msa.eshop.backend.common.ProductResponse
 import com.msa.eshop.backend.service.CatalogService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
