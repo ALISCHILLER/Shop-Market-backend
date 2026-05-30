@@ -14,7 +14,7 @@ description = "Production-grade Spring Boot Kotlin backend for Shop Market Compo
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

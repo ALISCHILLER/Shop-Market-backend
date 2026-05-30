@@ -32,7 +32,9 @@ class AdminCustomerController(
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(required = false) search: String?,
         @RequestParam(required = false) role: String?,
-        @RequestParam(required = false) enabled: Boolean?
+        @RequestParam(required = false) enabled: Boolean?,
+        @RequestParam(defaultValue = "createdAt") sortBy: String,
+        @RequestParam(defaultValue = "DESC") direction: String
     ): BaseResponse<PageResponseDto<UserDto>> =
         BaseResponse(
             customerService.search(
@@ -40,7 +42,9 @@ class AdminCustomerController(
                 size = size,
                 search = search,
                 role = role,
-                enabled = enabled
+                enabled = enabled,
+                sortBy = sortBy,
+                direction = direction
             )
         )
 
@@ -64,26 +68,4 @@ class AdminCustomerController(
         customerService.delete(id)
         return BaseResponse(true)
     }
-
-    @GetMapping("/page")
-    fun customersPage(
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int,
-        @RequestParam(required = false) search: String?,
-        @RequestParam(required = false) role: String?,
-        @RequestParam(required = false) enabled: Boolean?,
-        @RequestParam(defaultValue = "createdAt") sortBy: String,
-        @RequestParam(defaultValue = "DESC") direction: String
-    ): BaseResponse<PageResponseDto<UserDto>> =
-        BaseResponse(
-            customerService.search(
-                page = page,
-                size = size,
-                search = search,
-                role = role,
-                enabled = enabled,
-                sortBy = sortBy,
-                direction = direction
-            )
-        )
 }
