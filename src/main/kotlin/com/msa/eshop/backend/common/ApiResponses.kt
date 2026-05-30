@@ -91,8 +91,9 @@ data class InsertCartModelResponse(
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
 data class ChangePasswordResponse(
-    val insertCart: Boolean,
-    val data: Boolean = insertCart,
+    val changePassword: Boolean,
+    val insertCart: Boolean = changePassword,
+    val data: Boolean = changePassword,
     val hasError: Boolean = false,
     val message: String? = null
 )

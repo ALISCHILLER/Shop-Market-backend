@@ -39,7 +39,9 @@ class AdminCustomerService(
         size: Int,
         search: String?,
         role: String?,
-        enabled: Boolean?
+        enabled: Boolean?,
+        sortBy: String = "createdAt",
+        direction: String = "DESC"
     ): PageResponseDto<UserDto> {
         val normalizedRole = role
             .cleanOrNull()
@@ -48,7 +50,8 @@ class AdminCustomerService(
         val pageable = createPageable(
             page = page,
             size = size,
-            sortBy = "createdAt",
+            sortBy = sortBy,
+            direction = direction,
             allowedSorts = setOf("createdAt", "customerCode", "customerName")
         )
 

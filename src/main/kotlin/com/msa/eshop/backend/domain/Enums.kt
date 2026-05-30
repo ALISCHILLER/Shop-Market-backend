@@ -31,13 +31,14 @@ enum class PaymentKind {
 }
 
 enum class CartStatus(
+    val code: String,
     val title: String,
     val color: String
 ) {
-    REGISTERED("ثبت شده", "#2E7D32"),
-    PROCESSING("در حال بررسی", "#1565C0"),
-    CANCELLED("لغو شده", "#C62828"),
-    DELIVERED("تحویل شده", "#00695C");
+    REGISTERED("REGISTERED", "ثبت شده", "#2E7D32"),
+    PROCESSING("PROCESSING", "در حال بررسی", "#1565C0"),
+    CANCELLED("CANCELLED", "لغو شده", "#C62828"),
+    DELIVERED("DELIVERED", "تحویل شده", "#00695C");
 
     companion object {
         fun normalize(value: String?): CartStatus {
@@ -50,9 +51,12 @@ enum class CartStatus(
                 .uppercase()
                 .replace(" ", "_")
                 .replace("-", "_")
+                .replace("‌", "")
 
             return entries.firstOrNull { status ->
-                status.name == normalized || status.title == raw
+                status.name == normalized ||
+                        status.code == normalized ||
+                        status.title == raw
             } ?: when (raw) {
                 "ثبت", "ثبت‌شده", "ثبت شده" -> REGISTERED
                 "بررسی", "درحال بررسی", "در حال بررسی", "پردازش" -> PROCESSING

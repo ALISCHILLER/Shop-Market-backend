@@ -26,8 +26,11 @@ class AdminCartController(
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(required = false) cartCode: Int?,
         @RequestParam(required = false) customerSearch: String?,
+        @RequestParam(required = false) status: String?,
         @RequestParam(required = false) fromDate: String?,
-        @RequestParam(required = false) toDate: String?
+        @RequestParam(required = false) toDate: String?,
+        @RequestParam(defaultValue = "createdAt") sortBy: String,
+        @RequestParam(defaultValue = "DESC") direction: String
     ): BaseResponse<PageResponseDto<AdminCartSummaryDto>> =
         BaseResponse(
             cartService.findAll(
@@ -35,8 +38,11 @@ class AdminCartController(
                 size = size,
                 cartCode = cartCode,
                 customerSearch = customerSearch,
+                status = status,
                 fromDate = fromDate,
-                toDate = toDate
+                toDate = toDate,
+                sortBy = sortBy,
+                direction = direction
             )
         )
 

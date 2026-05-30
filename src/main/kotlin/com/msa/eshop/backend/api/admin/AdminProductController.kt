@@ -66,4 +66,27 @@ class AdminProductController(
         productService.delete(id)
         return BaseResponse(true)
     }
+    @GetMapping("/page")
+    fun productsPage(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) productGroupCode: Int?,
+        @RequestParam(required = false) isDiscounts: Boolean?,
+        @RequestParam(required = false) isTax: Boolean?,
+        @RequestParam(defaultValue = "productName") sortBy: String,
+        @RequestParam(defaultValue = "ASC") direction: String
+    ): BaseResponse<PageResponseDto<ProductDto>> =
+        BaseResponse(
+            productService.search(
+                page = page,
+                size = size,
+                search = search,
+                productGroupCode = productGroupCode,
+                isDiscounts = isDiscounts,
+                isTax = isTax,
+                sortBy = sortBy,
+                direction = direction
+            )
+        )
 }

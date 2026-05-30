@@ -31,8 +31,11 @@ class AdminCartService(
         size: Int,
         cartCode: Int?,
         customerSearch: String?,
+        status: String?,
         fromDate: String?,
-        toDate: String?
+        toDate: String?,
+        sortBy: String = "createdAt",
+        direction: String = "DESC"
     ): PageResponseDto<AdminCartSummaryDto> {
         if (cartCode != null && cartCode <= 0) {
             throw BadRequestException("کد سفارش معتبر نیست")
@@ -45,16 +48,22 @@ class AdminCartService(
             throw BadRequestException("تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد")
         }
 
+        val normalizedStatus = status
+            .cleanOrNull()
+            ?.let { CartStatus.normalize(it).code }
+
         val pageable = createPageable(
             page = page,
             size = size,
-            sortBy = "createdAt",
+            sortBy = sortBy,
+            direction = direction,
             allowedSorts = setOf("createdAt", "salesDate", "cartCode", "total")
         )
 
         val result = cartRepository.findAdminCarts(
             cartCode = cartCode,
             customerSearch = customerSearch.cleanOrNull(),
+            statusCode = normalizedStatus,
             fromDate = parsedFromDate,
             toDate = parsedToDate,
             pageable = pageable
@@ -110,7 +119,10 @@ class AdminCartService(
         val cart = cartRepository.findByCartCode(cartCode)
             ?: throw NotFoundException("سفارش پیدا نشد")
 
-        val currentStatus = CartStatus.normalize(cart.statusName)
+        val currentStatus = CartStatus.normalize(
+            cart.statusCode.ifBlank { cart.statusName }
+        )
+
         val targetStatus = CartStatus.normalize(request.status)
 
         cartStatusPolicy.assertCanChange(
@@ -118,8 +130,10 @@ class AdminCartService(
             target = targetStatus
         )
 
-        cart.statusName = targetStatus.title
-        cart.statusColor = request.color.cleanOrNull() ?: targetStatus.color
+        cart.applyStatus(
+            status = targetStatus,
+            customColor = request.color.cleanOrNull()
+        )
 
         val saved = cartRepository.save(cart)
 

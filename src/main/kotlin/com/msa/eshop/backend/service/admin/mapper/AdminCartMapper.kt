@@ -4,6 +4,7 @@ import com.msa.eshop.backend.common.AdminCartSummaryDto
 import com.msa.eshop.backend.common.ReportCartDetailsDto
 import com.msa.eshop.backend.domain.Cart
 import com.msa.eshop.backend.domain.CartItem
+import com.msa.eshop.backend.domain.CartStatus
 import org.springframework.stereotype.Component
 
 @Component
@@ -11,8 +12,12 @@ class AdminCartMapper {
     fun toSummaryDto(
         cart: Cart,
         itemCount: Int
-    ): AdminCartSummaryDto =
-        AdminCartSummaryDto(
+    ): AdminCartSummaryDto {
+        val status = CartStatus.normalize(
+            cart.statusCode.ifBlank { cart.statusName }
+        )
+
+        return AdminCartSummaryDto(
             id = requireNotNull(cart.id).toString(),
             cartCode = cart.cartCode,
             customerId = cart.customer?.id?.toString(),
@@ -21,8 +26,9 @@ class AdminCartMapper {
             customerAddress = cart.customerAddressSnapshot,
             paymentTermId = cart.paymentTerm?.id?.toString(),
             paymentTermName = cart.paymentTerm?.name.orEmpty(),
-            statusName = cart.statusName,
-            statusColor = cart.statusColor,
+            statusCode = status.code,
+            statusName = cart.statusName.ifBlank { status.title },
+            statusColor = cart.statusColor.ifBlank { status.color },
             salesDate = cart.salesDate.toString(),
             subtotal = cart.subtotal,
             discountTotal = cart.discountTotal,
@@ -31,6 +37,7 @@ class AdminCartMapper {
             itemCount = itemCount,
             createdAt = cart.createdAt.toString()
         )
+    }
 
     fun toDetailsDto(
         cart: Cart,

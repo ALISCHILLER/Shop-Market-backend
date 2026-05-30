@@ -11,18 +11,28 @@ fun createPageable(
     page: Int,
     size: Int,
     sortBy: String = "createdAt",
-    direction: Sort.Direction = Sort.Direction.DESC,
+    direction: String = "DESC",
     allowedSorts: Set<String> = setOf("createdAt")
 ): Pageable {
     val normalizedPage = page.coerceAtLeast(0)
     val normalizedSize = size.coerceIn(1, MAX_PAGE_SIZE)
 
-    val safeSortBy = if (sortBy in allowedSorts) sortBy else allowedSorts.first()
+    val safeSortBy = if (sortBy in allowedSorts) {
+        sortBy
+    } else {
+        allowedSorts.first()
+    }
+
+    val safeDirection = when (direction.trim().uppercase()) {
+        "ASC" -> Sort.Direction.ASC
+        "DESC" -> Sort.Direction.DESC
+        else -> Sort.Direction.DESC
+    }
 
     return PageRequest.of(
         normalizedPage,
         normalizedSize,
-        Sort.by(direction, safeSortBy)
+        Sort.by(safeDirection, safeSortBy)
     )
 }
 

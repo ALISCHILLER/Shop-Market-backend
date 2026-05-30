@@ -25,8 +25,6 @@ class CartAssembler {
             throw BadRequestException("سبد خرید خالی است")
         }
 
-        val status = CartStatus.REGISTERED
-
         val subtotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.gross }
         val discountTotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.totalDiscount }
         val taxTotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.tax }
@@ -39,14 +37,14 @@ class CartAssembler {
             paymentTerm = paymentTerm,
             customerNameSnapshot = customer.customerName.ifBlank { customer.customerCode },
             customerAddressSnapshot = address.customerAddress,
-            statusName = status.title,
-            statusColor = status.color,
             salesDate = LocalDate.now(),
             subtotal = subtotal.toPersistedInt(),
             discountTotal = discountTotal.toPersistedInt(),
             taxTotal = taxTotal.toPersistedInt(),
             total = total.toPersistedInt()
         )
+
+        cart.applyStatus(CartStatus.REGISTERED)
 
         priceLines.forEach { line ->
             cart.addItem(

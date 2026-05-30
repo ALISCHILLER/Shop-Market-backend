@@ -146,4 +146,36 @@ class AdminProductService(
             throw BadRequestException("دسته‌بندی کالا پیدا نشد")
         }
     }
+
+    @Transactional(readOnly = true)
+    fun search(
+        page: Int,
+        size: Int,
+        search: String?,
+        productGroupCode: Int?,
+        isDiscounts: Boolean?,
+        isTax: Boolean?,
+        sortBy: String = "productName",
+        direction: String = "ASC"
+    ): PageResponseDto<ProductDto> {
+        if (productGroupCode != null && productGroupCode <= 0) {
+            throw BadRequestException("کد گروه کالا معتبر نیست")
+        }
+
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            direction = direction,
+            allowedSorts = setOf("productName", "productCode", "price")
+        )
+
+        return productRepository.searchAdminProducts(
+            search = search.cleanOrNull(),
+            productGroupCode = productGroupCode,
+            isDiscounts = isDiscounts,
+            isTax = isTax,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
+    }
 }

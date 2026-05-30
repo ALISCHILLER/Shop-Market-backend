@@ -84,6 +84,21 @@ class GlobalExceptionHandler {
                 )
             )
     }
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException::class)
+    fun handleOptimisticLock(
+        exception: org.springframework.orm.ObjectOptimisticLockingFailureException
+    ): ResponseEntity<BaseResponse<Nothing>> {
+        logger.warn("Optimistic lock failure", exception)
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(
+                BaseResponse(
+                    data = null,
+                    hasError = true,
+                    message = "این اطلاعات توسط کاربر یا عملیات دیگری تغییر کرده است. لطفاً صفحه را به‌روزرسانی کنید"
+                )
+            )
+    }
 
     @ExceptionHandler(Exception::class)
     fun handleUnknown(exception: Exception): ResponseEntity<BaseResponse<Nothing>> {

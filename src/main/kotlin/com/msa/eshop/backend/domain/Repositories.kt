@@ -1,5 +1,7 @@
 package com.msa.eshop.backend.domain
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -7,8 +9,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDate
 import java.util.UUID
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
+
 interface CustomerRepository : JpaRepository<Customer, UUID> {
     fun findByCustomerCode(customerCode: String): Customer?
     fun existsByCustomerCode(customerCode: String): Boolean
@@ -54,7 +55,7 @@ interface ProductRepository : JpaRepository<Product, UUID> {
         select p from Product p
         where (:search is null
                or lower(coalesce(p.productName, '')) like lower(concat('%', :search, '%'))
-               or cast(p.productCode as string) like concat('%', :search, '%'))
+               or str(p.productCode) like concat('%', :search, '%'))
           and (:productGroupCode is null or p.productGroupCode = :productGroupCode)
           and (:isDiscounts is null or p.isDiscounts = :isDiscounts)
           and (:isTax is null or p.isTax = :isTax)
@@ -165,6 +166,7 @@ interface CartRepository : JpaRepository<Cart, UUID> {
           and (:customerSearch is null
                or lower(c.customerNameSnapshot) like lower(concat('%', :customerSearch, '%'))
                or lower(c.customer.customerCode) like lower(concat('%', :customerSearch, '%')))
+          and (:statusCode is null or c.statusCode = :statusCode)
           and (:fromDate is null or c.salesDate >= :fromDate)
           and (:toDate is null or c.salesDate <= :toDate)
         """
@@ -172,6 +174,7 @@ interface CartRepository : JpaRepository<Cart, UUID> {
     fun findAdminCarts(
         @Param("cartCode") cartCode: Int?,
         @Param("customerSearch") customerSearch: String?,
+        @Param("statusCode") statusCode: String?,
         @Param("fromDate") fromDate: LocalDate?,
         @Param("toDate") toDate: LocalDate?,
         pageable: Pageable
