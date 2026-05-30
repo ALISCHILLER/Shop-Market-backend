@@ -33,6 +33,33 @@ class AdminCustomerService(
             .sortedBy { it.customerCode }
             .map { it.toDto() }
 
+    @Transactional(readOnly = true)
+    fun search(
+        page: Int,
+        size: Int,
+        search: String?,
+        role: String?,
+        enabled: Boolean?
+    ): PageResponseDto<UserDto> {
+        val normalizedRole = role
+            .cleanOrNull()
+            ?.let { CustomerRole.normalize(it).name }
+
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = "createdAt",
+            allowedSorts = setOf("createdAt", "customerCode", "customerName")
+        )
+
+        return customerRepository.searchAdminCustomers(
+            search = search.cleanOrNull(),
+            role = normalizedRole,
+            enabled = enabled,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
+    }
+
     @Transactional
     fun create(request: UpsertCustomerRequest): UserDto {
         val customerCode = request.customerCode.cleanRequired("کد مشتری الزامی است")
@@ -125,31 +152,5 @@ class AdminCustomerService(
         const val DEFAULT_PASSWORD = "123456"
         const val PASSWORD_ALGORITHM = "bcrypt"
         const val MIN_PASSWORD_LENGTH = 6
-    }
-
-    @Transactional(readOnly = true)
-    fun search(
-        page: Int,
-        size: Int,
-        search: String?,
-        role: String?,
-        enabled: Boolean?
-    ): PageResponseDto<UserDto> {
-        val normalizedRole = role
-            .cleanOrNull()
-            ?.let { CustomerRole.normalize(it).name }
-
-        val pageable = createPageable(
-            page = page,
-            size = size,
-            sortBy = "createdAt"
-        )
-
-        return customerRepository.searchAdminCustomers(
-            search = search.cleanOrNull(),
-            role = normalizedRole,
-            enabled = enabled,
-            pageable = pageable
-        ).toPageResponse { it.toDto() }
     }
 }

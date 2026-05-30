@@ -12,20 +12,26 @@ class CartStatusPolicy {
     ) {
         if (current == target) return
 
-        if (current == CartStatus.CANCELLED) {
-            throw BadRequestException("سفارش لغو شده قابل تغییر وضعیت نیست")
-        }
+        when (current) {
+            CartStatus.CANCELLED -> {
+                throw BadRequestException("سفارش لغو شده قابل تغییر وضعیت نیست")
+            }
 
-        if (current == CartStatus.DELIVERED) {
-            throw BadRequestException("سفارش تحویل شده قابل تغییر وضعیت نیست")
-        }
+            CartStatus.DELIVERED -> {
+                throw BadRequestException("سفارش تحویل شده قابل تغییر وضعیت نیست")
+            }
 
-        if (current == CartStatus.REGISTERED && target == CartStatus.DELIVERED) {
-            throw BadRequestException("سفارش ثبت شده باید ابتدا وارد مرحله بررسی شود")
-        }
+            CartStatus.REGISTERED -> {
+                if (target == CartStatus.DELIVERED) {
+                    throw BadRequestException("سفارش ثبت شده باید ابتدا وارد مرحله بررسی شود")
+                }
+            }
 
-        if (current == CartStatus.PROCESSING && target == CartStatus.REGISTERED) {
-            throw BadRequestException("سفارش در حال بررسی نمی‌تواند به وضعیت ثبت شده برگردد")
+            CartStatus.PROCESSING -> {
+                if (target == CartStatus.REGISTERED) {
+                    throw BadRequestException("سفارش در حال بررسی نمی‌تواند به وضعیت ثبت شده برگردد")
+                }
+            }
         }
     }
 }

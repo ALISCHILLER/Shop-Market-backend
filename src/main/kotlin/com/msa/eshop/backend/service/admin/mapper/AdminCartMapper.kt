@@ -1,0 +1,55 @@
+package com.msa.eshop.backend.service.admin.mapper
+
+import com.msa.eshop.backend.common.AdminCartSummaryDto
+import com.msa.eshop.backend.common.ReportCartDetailsDto
+import com.msa.eshop.backend.domain.Cart
+import com.msa.eshop.backend.domain.CartItem
+import org.springframework.stereotype.Component
+
+@Component
+class AdminCartMapper {
+    fun toSummaryDto(
+        cart: Cart,
+        itemCount: Int
+    ): AdminCartSummaryDto =
+        AdminCartSummaryDto(
+            id = requireNotNull(cart.id).toString(),
+            cartCode = cart.cartCode,
+            customerId = cart.customer?.id?.toString(),
+            customerCode = cart.customer?.customerCode.orEmpty(),
+            customerName = cart.customerNameSnapshot,
+            customerAddress = cart.customerAddressSnapshot,
+            paymentTermId = cart.paymentTerm?.id?.toString(),
+            paymentTermName = cart.paymentTerm?.name.orEmpty(),
+            statusName = cart.statusName,
+            statusColor = cart.statusColor,
+            salesDate = cart.salesDate.toString(),
+            subtotal = cart.subtotal,
+            discountTotal = cart.discountTotal,
+            taxTotal = cart.taxTotal,
+            total = cart.total,
+            itemCount = itemCount,
+            createdAt = cart.createdAt.toString()
+        )
+
+    fun toDetailsDto(
+        cart: Cart,
+        item: CartItem
+    ): ReportCartDetailsDto =
+        ReportCartDetailsDto(
+            id = requireNotNull(item.id).toString(),
+            cartCode = cart.cartCode,
+            customerAddress = cart.customerAddressSnapshot,
+            customerName = cart.customerNameSnapshot,
+            discount = item.discount,
+            price = item.price,
+            productCode = item.productCode.toString(),
+            productImageUrl = item.productImageUrl.orEmpty(),
+            productName = item.productName,
+            quantity = item.quantity,
+            salesDate = cart.salesDate.toString(),
+            statusName = cart.statusName,
+            tax = item.tax,
+            total = item.total
+        )
+}

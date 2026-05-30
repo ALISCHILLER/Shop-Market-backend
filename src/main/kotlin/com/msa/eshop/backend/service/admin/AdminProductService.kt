@@ -28,6 +28,35 @@ class AdminProductService(
         productRepository.findAllByOrderByProductNameAsc()
             .map { it.toDto() }
 
+    @Transactional(readOnly = true)
+    fun search(
+        page: Int,
+        size: Int,
+        search: String?,
+        productGroupCode: Int?,
+        isDiscounts: Boolean?,
+        isTax: Boolean?
+    ): PageResponseDto<ProductDto> {
+        if (productGroupCode != null && productGroupCode <= 0) {
+            throw BadRequestException("کد گروه کالا معتبر نیست")
+        }
+
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = "productName",
+            allowedSorts = setOf("productName", "productCode", "price")
+        )
+
+        return productRepository.searchAdminProducts(
+            search = search.cleanOrNull(),
+            productGroupCode = productGroupCode,
+            isDiscounts = isDiscounts,
+            isTax = isTax,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
+    }
+
     @Transactional
     fun create(request: UpsertProductRequest): ProductDto {
         validateRequest(request)
@@ -116,32 +145,5 @@ class AdminProductService(
         if (!categoryRepository.existsById(code)) {
             throw BadRequestException("دسته‌بندی کالا پیدا نشد")
         }
-    }
-    @Transactional(readOnly = true)
-    fun search(
-        page: Int,
-        size: Int,
-        search: String?,
-        productGroupCode: Int?,
-        isDiscounts: Boolean?,
-        isTax: Boolean?
-    ): PageResponseDto<ProductDto> {
-        if (productGroupCode != null && productGroupCode <= 0) {
-            throw BadRequestException("کد گروه کالا معتبر نیست")
-        }
-
-        val pageable = createPageable(
-            page = page,
-            size = size,
-            sortBy = "productName"
-        )
-
-        return productRepository.searchAdminProducts(
-            search = search.cleanOrNull(),
-            productGroupCode = productGroupCode,
-            isDiscounts = isDiscounts,
-            isTax = isTax,
-            pageable = pageable
-        ).toPageResponse { it.toDto() }
     }
 }

@@ -10,12 +10,11 @@ import com.msa.eshop.backend.common.cleanOrNull
 import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.parseClientDateOrNull
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.Cart
 import com.msa.eshop.backend.domain.CartItemRepository
 import com.msa.eshop.backend.domain.CartRepository
 import com.msa.eshop.backend.domain.CartStatus
+import com.msa.eshop.backend.service.admin.mapper.AdminCartMapper
 import com.msa.eshop.backend.service.cart.CartStatusPolicy
-import com.msa.eshop.backend.service.toDetailsDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,7 +22,8 @@ import org.springframework.transaction.annotation.Transactional
 class AdminCartService(
     private val cartRepository: CartRepository,
     private val cartItemRepository: CartItemRepository,
-    private val cartStatusPolicy: CartStatusPolicy
+    private val cartStatusPolicy: CartStatusPolicy,
+    private val adminCartMapper: AdminCartMapper
 ) {
     @Transactional(readOnly = true)
     fun findAll(
@@ -48,7 +48,8 @@ class AdminCartService(
         val pageable = createPageable(
             page = page,
             size = size,
-            sortBy = "createdAt"
+            sortBy = "createdAt",
+            allowedSorts = setOf("createdAt", "salesDate", "cartCode", "total")
         )
 
         val result = cartRepository.findAdminCarts(
@@ -60,15 +61,19 @@ class AdminCartService(
         )
 
         val cartIds = result.content.mapNotNull { it.id }
+
         val itemCounts = if (cartIds.isEmpty()) {
             emptyMap()
         } else {
             cartItemRepository.countItemsByCartIds(cartIds)
-                .associate { it.cartId to it.itemCount.toInt() }
+                .associate { projection ->
+                    projection.cartId to projection.itemCount.toInt()
+                }
         }
 
         return result.toPageResponse { cart ->
-            cart.toAdminSummaryDto(
+            adminCartMapper.toSummaryDto(
+                cart = cart,
                 itemCount = cart.id?.let { itemCounts[it] } ?: 0
             )
         }
@@ -85,7 +90,12 @@ class AdminCartService(
 
         return cart.items
             .sortedBy { it.productCode }
-            .map { it.toDetailsDto(cart) }
+            .map { item ->
+                adminCartMapper.toDetailsDto(
+                    cart = cart,
+                    item = item
+                )
+            }
     }
 
     @Transactional
@@ -113,29 +123,9 @@ class AdminCartService(
 
         val saved = cartRepository.save(cart)
 
-        return saved.toAdminSummaryDto(
+        return adminCartMapper.toSummaryDto(
+            cart = saved,
             itemCount = saved.items.size
         )
     }
-
-    private fun Cart.toAdminSummaryDto(itemCount: Int): AdminCartSummaryDto =
-        AdminCartSummaryDto(
-            id = requireNotNull(id).toString(),
-            cartCode = cartCode,
-            customerId = customer?.id?.toString(),
-            customerCode = customer?.customerCode.orEmpty(),
-            customerName = customerNameSnapshot,
-            customerAddress = customerAddressSnapshot,
-            paymentTermId = paymentTerm?.id?.toString(),
-            paymentTermName = paymentTerm?.name.orEmpty(),
-            statusName = statusName,
-            statusColor = statusColor,
-            salesDate = salesDate.toString(),
-            subtotal = subtotal,
-            discountTotal = discountTotal,
-            taxTotal = taxTotal,
-            total = total,
-            itemCount = itemCount,
-            createdAt = createdAt.toString()
-        )
 }
