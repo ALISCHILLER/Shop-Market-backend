@@ -3,13 +3,13 @@ package com.msa.eshop.backend.service
 import com.msa.eshop.backend.common.BannerDto
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.DiscountResultDto
-import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.ProductDto
 import com.msa.eshop.backend.common.ProductGroupDto
 import com.msa.eshop.backend.domain.BannerRepository
 import com.msa.eshop.backend.domain.DiscountRepository
 import com.msa.eshop.backend.domain.ProductCategoryRepository
 import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.service.catalog.ProductResolver
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -19,7 +19,8 @@ class CatalogService(
     private val productRepository: ProductRepository,
     private val productCategoryRepository: ProductCategoryRepository,
     private val discountRepository: DiscountRepository,
-    private val bannerRepository: BannerRepository
+    private val bannerRepository: BannerRepository,
+    private val productResolver: ProductResolver
 ) {
     @Transactional(readOnly = true)
     fun products(): List<ProductDto> =
@@ -45,26 +46,15 @@ class CatalogService(
                 .map { it.toDto() }
         }
 
-        val byUuid = runCatching { UUID.fromString(value) }.getOrNull()
-        if (byUuid != null) {
-            return discountRepository.findByProductId(byUuid)
-                .sortedBy { it.fromNumber }
-                .map { it.toDto() }
-        }
+        val product = productResolver.requireByIdOrCode(value)
+        val productId = requireNotNull(product.id)
 
-        val byCode = value.toIntOrNull()
-        if (byCode != null) {
-            return discountRepository.findByProductProductCode(byCode)
-                .sortedBy { it.fromNumber }
-                .map { it.toDto() }
-        }
-
-        throw BadRequestException("شناسه کالا معتبر نیست")
+        return discountRepository.findByProductId(productId)
+            .sortedBy { it.fromNumber }
+            .map { it.toDto() }
     }
 
     @Transactional(readOnly = true)
     fun getProduct(productId: UUID): ProductDto =
-        productRepository.findById(productId)
-            .orElseThrow { NotFoundException("کالا پیدا نشد") }
-            .toDto()
+        productResolver.requireById(productId).toDto()
 }

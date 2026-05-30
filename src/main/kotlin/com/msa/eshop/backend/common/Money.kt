@@ -10,8 +10,10 @@ data class Money(
         if (value < 0) throw BadRequestException("مبلغ نمی‌تواند منفی باشد")
     }
 
-    operator fun plus(other: Money): Money =
-        Money(value + other.value)
+    operator fun plus(other: Money): Money {
+        val result = Math.addExact(value, other.value)
+        return Money(result)
+    }
 
     operator fun minus(other: Money): Money {
         val result = value - other.value
@@ -52,7 +54,7 @@ data class Money(
             if (unitPrice < 0) throw BadRequestException("قیمت کالا معتبر نیست")
             if (quantity <= 0) throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
 
-            return Money(unitPrice.toLong() * quantity.toLong())
+            return Money(Math.multiplyExact(unitPrice.toLong(), quantity.toLong()))
         }
     }
 }

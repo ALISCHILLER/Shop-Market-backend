@@ -16,10 +16,10 @@ import com.msa.eshop.backend.domain.CustomerAddress
 import com.msa.eshop.backend.domain.CustomerAddressRepository
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.domain.PaymentTermRepository
-import com.msa.eshop.backend.domain.Product
-import com.msa.eshop.backend.domain.ProductRepository
 import com.msa.eshop.backend.service.CurrentUserService
+import com.msa.eshop.backend.service.PricingRequest
 import com.msa.eshop.backend.service.PricingService
+import com.msa.eshop.backend.service.catalog.ProductResolver
 import com.msa.eshop.backend.service.toDetailsDto
 import com.msa.eshop.backend.service.toDto
 import com.msa.eshop.backend.service.toHistoryDto
@@ -32,9 +32,9 @@ class CartQueryService(
     private val customerRepository: CustomerRepository,
     private val addressRepository: CustomerAddressRepository,
     private val paymentTermRepository: PaymentTermRepository,
-    private val productRepository: ProductRepository,
     private val cartRepository: CartRepository,
     private val pricingService: PricingService,
+    private val productResolver: ProductResolver,
     private val cartAccessPolicy: CartAccessPolicy,
     private val cartLineNormalizer: CartLineNormalizer
 ) {
@@ -44,18 +44,19 @@ class CartQueryService(
         if (lines.isEmpty()) return emptyList()
 
         val paymentTerm = paymentTermRepository.findFirstByActiveTrueOrderByDeadLineAsc()
-        val products = loadProducts(lines.map { it.productCode })
+        val productsByCode = productResolver.requireByCodes(lines.map { it.productCode })
 
-        return lines.map { line ->
-            val product = products[line.productCode]
-                ?: throw NotFoundException("کالا با کد ${line.productCode} پیدا نشد")
-
-            pricingService.simulate(
-                product = product,
-                quantity = line.quantity,
-                paymentTerm = paymentTerm
+        val pricingRequests = lines.map { line ->
+            PricingRequest(
+                product = productsByCode.getValue(line.productCode),
+                quantity = line.quantity
             )
         }
+
+        return pricingService.simulateBatch(
+            requests = pricingRequests,
+            paymentTerm = paymentTerm
+        )
     }
 
     @Transactional(readOnly = true)
@@ -121,19 +122,5 @@ class CartQueryService(
         return cart.items
             .sortedBy { it.productCode }
             .map { it.toDetailsDto(cart) }
-    }
-
-    private fun loadProducts(productCodes: List<Int>): Map<Int, Product> {
-        val uniqueCodes = productCodes.toSet()
-
-        val products = productRepository.findByProductCodeIn(uniqueCodes)
-            .associateBy { it.productCode }
-
-        val missingCodes = uniqueCodes - products.keys
-        if (missingCodes.isNotEmpty()) {
-            throw NotFoundException("کالا با کد ${missingCodes.first()} پیدا نشد")
-        }
-
-        return products
     }
 }

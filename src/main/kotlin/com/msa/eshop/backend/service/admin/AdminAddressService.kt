@@ -31,7 +31,10 @@ class AdminAddressService(
         }
 
         return addresses
-            .sortedWith(compareByDescending<CustomerAddress> { it.isDefault }.thenBy { it.centerName })
+            .sortedWith(
+                compareByDescending<CustomerAddress> { it.isDefault }
+                    .thenBy { it.centerName }
+            )
             .map { it.toDto() }
     }
 
@@ -51,7 +54,10 @@ class AdminAddressService(
         val shouldBeDefault = request.isDefault ?: isFirstAddress
 
         if (shouldBeDefault) {
-            clearDefaultAddress(customerId, exceptId = null)
+            addressRepository.clearDefaultForCustomer(
+                customerId = customerId,
+                exceptId = null
+            )
         }
 
         val address = CustomerAddress(
@@ -77,7 +83,6 @@ class AdminAddressService(
             .orElseThrow { NotFoundException("آدرس پیدا نشد") }
 
         val oldCustomerId = address.customer?.id
-
         val newCustomerId = request.customerId.toUuidOrBadRequest("شناسه مشتری معتبر نیست")
 
         val customer = customerRepository.findById(newCustomerId)
@@ -91,7 +96,10 @@ class AdminAddressService(
         val shouldBeDefault = request.isDefault ?: address.isDefault
 
         if (shouldBeDefault) {
-            clearDefaultAddress(newCustomerId, exceptId = id)
+            addressRepository.clearDefaultForCustomer(
+                customerId = newCustomerId,
+                exceptId = id
+            )
         }
 
         address.customer = customer
@@ -130,12 +138,6 @@ class AdminAddressService(
         if (customerId != null) {
             ensureOneDefaultAddress(customerId)
         }
-    }
-
-    private fun clearDefaultAddress(customerId: UUID, exceptId: UUID?) {
-        addressRepository.findByCustomerId(customerId)
-            .filter { it.id != exceptId && it.isDefault }
-            .forEach { it.isDefault = false }
     }
 
     private fun ensureOneDefaultAddress(customerId: UUID) {

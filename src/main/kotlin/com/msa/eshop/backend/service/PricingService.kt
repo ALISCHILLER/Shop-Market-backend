@@ -3,6 +3,7 @@ package com.msa.eshop.backend.service
 import com.msa.eshop.backend.common.Money
 import com.msa.eshop.backend.common.SimulateDto
 import com.msa.eshop.backend.common.requirePercent
+import com.msa.eshop.backend.domain.Discount
 import com.msa.eshop.backend.domain.DiscountRepository
 import com.msa.eshop.backend.domain.PaymentKind
 import com.msa.eshop.backend.domain.PaymentTerm
@@ -10,6 +11,7 @@ import com.msa.eshop.backend.domain.Product
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 class PricingService(
@@ -27,37 +29,44 @@ class PricingService(
         paymentTerm: PaymentTerm?,
         paymentKind: PaymentKind = PaymentKind.RECEIPT
     ): PriceLine {
-        val gross = Money.multiply(product.price, quantity)
+        val discounts = product.id
+            ?.let { discountRepository.findByProductId(it) }
+            .orEmpty()
 
-        val productDiscountPercent = findBestProductDiscountPercent(product, quantity)
-        val productDiscount = gross.percent(productDiscountPercent)
-
-        val afterProductDiscount = gross - productDiscount
-
-        val paymentDiscountPercent = resolvePaymentDiscountPercent(paymentTerm, paymentKind)
-        val paymentDiscount = afterProductDiscount.percent(paymentDiscountPercent)
-
-        val taxableAmount = afterProductDiscount - paymentDiscount
-        val tax = if (product.isTax) taxableAmount.percent(taxPercent) else Money.zero()
-        val total = taxableAmount + tax
-
-        val taxWithoutPaymentDiscount =
-            if (product.isTax) afterProductDiscount.percent(taxPercent) else Money.zero()
-
-        return PriceLine(
+        return calculateInternal(
             product = product,
             quantity = quantity,
-            gross = gross,
-            productDiscountPercent = productDiscountPercent,
-            productDiscount = productDiscount,
-            afterProductDiscount = afterProductDiscount,
-            paymentDiscountPercent = paymentDiscountPercent,
-            paymentDiscount = paymentDiscount,
-            taxableAmount = taxableAmount,
-            tax = tax,
-            taxWithoutPaymentDiscount = taxWithoutPaymentDiscount,
-            total = total
+            paymentTerm = paymentTerm,
+            paymentKind = paymentKind,
+            productDiscounts = discounts
         )
+    }
+
+    @Transactional(readOnly = true)
+    fun calculateBatch(
+        requests: List<PricingRequest>,
+        paymentTerm: PaymentTerm?,
+        paymentKind: PaymentKind = PaymentKind.RECEIPT
+    ): List<PriceLine> {
+        if (requests.isEmpty()) return emptyList()
+
+        val discountsByProductId = loadDiscountsByProductId(
+            requests.map { it.product }
+        )
+
+        return requests.map { request ->
+            val productId = requireNotNull(request.product.id) {
+                "Product must be persisted before pricing"
+            }
+
+            calculateInternal(
+                product = request.product,
+                quantity = request.quantity,
+                paymentTerm = paymentTerm,
+                paymentKind = request.paymentKind ?: paymentKind,
+                productDiscounts = discountsByProductId[productId].orEmpty()
+            )
+        }
     }
 
     @Transactional(readOnly = true)
@@ -66,9 +75,72 @@ class PricingService(
         quantity: Int,
         paymentTerm: PaymentTerm?
     ): SimulateDto {
-        val receipt = calculate(product, quantity, paymentTerm, PaymentKind.RECEIPT)
-        val immediate = calculate(product, quantity, paymentTerm, PaymentKind.IMMEDIATE)
-        val cheque = calculate(product, quantity, paymentTerm, PaymentKind.CHEQUE)
+        val discounts = product.id
+            ?.let { discountRepository.findByProductId(it) }
+            .orEmpty()
+
+        return buildSimulateDto(
+            product = product,
+            quantity = quantity,
+            paymentTerm = paymentTerm,
+            productDiscounts = discounts
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun simulateBatch(
+        requests: List<PricingRequest>,
+        paymentTerm: PaymentTerm?
+    ): List<SimulateDto> {
+        if (requests.isEmpty()) return emptyList()
+
+        val discountsByProductId = loadDiscountsByProductId(
+            requests.map { it.product }
+        )
+
+        return requests.map { request ->
+            val productId = requireNotNull(request.product.id) {
+                "Product must be persisted before simulation"
+            }
+
+            buildSimulateDto(
+                product = request.product,
+                quantity = request.quantity,
+                paymentTerm = paymentTerm,
+                productDiscounts = discountsByProductId[productId].orEmpty()
+            )
+        }
+    }
+
+    private fun buildSimulateDto(
+        product: Product,
+        quantity: Int,
+        paymentTerm: PaymentTerm?,
+        productDiscounts: List<Discount>
+    ): SimulateDto {
+        val receipt = calculateInternal(
+            product = product,
+            quantity = quantity,
+            paymentTerm = paymentTerm,
+            paymentKind = PaymentKind.RECEIPT,
+            productDiscounts = productDiscounts
+        )
+
+        val immediate = calculateInternal(
+            product = product,
+            quantity = quantity,
+            paymentTerm = paymentTerm,
+            paymentKind = PaymentKind.IMMEDIATE,
+            productDiscounts = productDiscounts
+        )
+
+        val cheque = calculateInternal(
+            product = product,
+            quantity = quantity,
+            paymentTerm = paymentTerm,
+            paymentKind = PaymentKind.CHEQUE,
+            productDiscounts = productDiscounts
+        )
 
         return SimulateDto(
             convertFactor1 = product.convertFactor1,
@@ -119,12 +191,58 @@ class PricingService(
         )
     }
 
-    private fun findBestProductDiscountPercent(product: Product, quantity: Int): Int {
+    private fun calculateInternal(
+        product: Product,
+        quantity: Int,
+        paymentTerm: PaymentTerm?,
+        paymentKind: PaymentKind,
+        productDiscounts: List<Discount>
+    ): PriceLine {
+        val gross = Money.multiply(product.price, quantity)
+
+        val productDiscountPercent = findBestProductDiscountPercent(
+            product = product,
+            quantity = quantity,
+            discounts = productDiscounts
+        )
+
+        val productDiscount = gross.percent(productDiscountPercent)
+        val afterProductDiscount = gross - productDiscount
+
+        val paymentDiscountPercent = resolvePaymentDiscountPercent(paymentTerm, paymentKind)
+        val paymentDiscount = afterProductDiscount.percent(paymentDiscountPercent)
+
+        val taxableAmount = afterProductDiscount - paymentDiscount
+        val tax = if (product.isTax) taxableAmount.percent(taxPercent) else Money.zero()
+        val total = taxableAmount + tax
+
+        val taxWithoutPaymentDiscount =
+            if (product.isTax) afterProductDiscount.percent(taxPercent) else Money.zero()
+
+        return PriceLine(
+            product = product,
+            quantity = quantity,
+            gross = gross,
+            productDiscountPercent = productDiscountPercent,
+            productDiscount = productDiscount,
+            afterProductDiscount = afterProductDiscount,
+            paymentDiscountPercent = paymentDiscountPercent,
+            paymentDiscount = paymentDiscount,
+            taxableAmount = taxableAmount,
+            tax = tax,
+            taxWithoutPaymentDiscount = taxWithoutPaymentDiscount,
+            total = total
+        )
+    }
+
+    private fun findBestProductDiscountPercent(
+        product: Product,
+        quantity: Int,
+        discounts: List<Discount>
+    ): Int {
         if (!product.isDiscounts) return 0
 
-        val productId = product.id ?: return 0
-
-        return discountRepository.findByProductId(productId)
+        return discounts
             .asSequence()
             .filter { quantity in it.fromNumber..it.endNumber }
             .maxByOrNull { it.discountPercent }
@@ -144,7 +262,24 @@ class PricingService(
             PaymentKind.CHEQUE -> paymentTerm.chequeDiscountPercent
         }.requirePercent()
     }
+
+    private fun loadDiscountsByProductId(products: List<Product>): Map<UUID, List<Discount>> {
+        val productIds = products
+            .mapNotNull { it.id }
+            .toSet()
+
+        if (productIds.isEmpty()) return emptyMap()
+
+        return discountRepository.findByProductIdIn(productIds)
+            .groupBy { requireNotNull(it.product?.id) }
+    }
 }
+
+data class PricingRequest(
+    val product: Product,
+    val quantity: Int,
+    val paymentKind: PaymentKind? = null
+)
 
 data class PriceLine(
     val product: Product,

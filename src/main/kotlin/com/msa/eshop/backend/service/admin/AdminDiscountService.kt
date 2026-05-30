@@ -8,8 +8,7 @@ import com.msa.eshop.backend.common.requireMin
 import com.msa.eshop.backend.common.requirePercent
 import com.msa.eshop.backend.domain.Discount
 import com.msa.eshop.backend.domain.DiscountRepository
-import com.msa.eshop.backend.domain.Product
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.service.catalog.ProductResolver
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,7 +17,7 @@ import java.util.UUID
 @Service
 class AdminDiscountService(
     private val discountRepository: DiscountRepository,
-    private val productRepository: ProductRepository
+    private val productResolver: ProductResolver
 ) {
     @Transactional(readOnly = true)
     fun findAll(): List<DiscountResultDto> =
@@ -29,7 +28,7 @@ class AdminDiscountService(
     fun create(request: UpsertDiscountRequest): DiscountResultDto {
         validateRequest(request)
 
-        val product = request.productId.findProduct()
+        val product = productResolver.requireByIdOrCode(request.productId)
         val productId = requireNotNull(product.id)
 
         validateNoOverlap(
@@ -56,7 +55,7 @@ class AdminDiscountService(
         val discount = discountRepository.findById(id)
             .orElseThrow { NotFoundException("تخفیف پیدا نشد") }
 
-        val product = request.productId.findProduct()
+        val product = productResolver.requireByIdOrCode(request.productId)
         val productId = requireNotNull(product.id)
 
         validateNoOverlap(
@@ -97,31 +96,15 @@ class AdminDiscountService(
         endNumber: Int,
         exceptDiscountId: UUID?
     ) {
-        val hasOverlap = discountRepository.findByProductId(productId)
-            .asSequence()
-            .filter { it.id != exceptDiscountId }
-            .any { existing ->
-                fromNumber <= existing.endNumber && endNumber >= existing.fromNumber
-            }
+        val hasOverlap = discountRepository.existsOverlappingRange(
+            productId = productId,
+            fromNumber = fromNumber,
+            endNumber = endNumber,
+            exceptDiscountId = exceptDiscountId
+        )
 
         if (hasOverlap) {
             throw BadRequestException("بازه تخفیف با تخفیف دیگری برای همین کالا تداخل دارد")
         }
-    }
-
-    private fun String.findProduct(): Product {
-        val value = trim()
-
-        val asUuid = runCatching { UUID.fromString(value) }.getOrNull()
-        if (asUuid != null) {
-            return productRepository.findById(asUuid)
-                .orElseThrow { NotFoundException("کالا پیدا نشد") }
-        }
-
-        val asCode = value.toIntOrNull()
-            ?: throw BadRequestException("شناسه کالا معتبر نیست")
-
-        return productRepository.findByProductCode(asCode)
-            ?: throw NotFoundException("کالا پیدا نشد")
     }
 }

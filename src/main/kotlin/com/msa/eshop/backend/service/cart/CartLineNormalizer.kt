@@ -14,7 +14,6 @@ class CartLineNormalizer {
             .groupBy { it.productCode }
             .map { (productCode, rows) ->
                 val quantity = rows.sumOf { it.quantity }
-
                 validateLine(productCode, quantity)
 
                 NormalizedCartLine(
@@ -35,7 +34,6 @@ class CartLineNormalizer {
             .groupBy { it.productCode }
             .map { (productCode, rows) ->
                 val quantity = rows.sumOf { it.quantity }
-
                 validateLine(productCode, quantity)
 
                 NormalizedCartLine(
@@ -45,25 +43,36 @@ class CartLineNormalizer {
             }
     }
 
-    private fun validateSameHeader(requests: List<InsertCartModelRequest>) {
+    fun extractCheckoutHeader(requests: List<InsertCartModelRequest>): CheckoutHeader {
+        if (requests.isEmpty()) {
+            throw BadRequestException("سبد خرید خالی است")
+        }
+
         val first = requests.first()
 
-        if (first.customerAddressId.isBlank()) {
-            throw BadRequestException("شناسه آدرس الزامی است")
-        }
+        return CheckoutHeader(
+            customerAddressId = first.customerAddressId.trim().ifBlank {
+                throw BadRequestException("شناسه آدرس الزامی است")
+            },
+            paymentTermId = first.paymentTermId.trim().ifBlank {
+                throw BadRequestException("شناسه روش پرداخت الزامی است")
+            }
+        )
+    }
 
-        if (first.paymentTermId.isBlank()) {
-            throw BadRequestException("شناسه روش پرداخت الزامی است")
-        }
+    private fun validateSameHeader(requests: List<InsertCartModelRequest>) {
+        val header = extractCheckoutHeader(requests)
 
         requests.forEach { item ->
-            if (item.customerAddressId.trim() != first.customerAddressId.trim()) {
+            if (item.customerAddressId.trim() != header.customerAddressId) {
                 throw BadRequestException("همه آیتم‌های سبد باید یک آدرس مشترک داشته باشند")
             }
 
-            if (item.paymentTermId.trim() != first.paymentTermId.trim()) {
+            if (item.paymentTermId.trim() != header.paymentTermId) {
                 throw BadRequestException("همه آیتم‌های سبد باید یک روش پرداخت مشترک داشته باشند")
             }
+
+            validateLine(item.productCode, item.quantity)
         }
     }
 
@@ -81,4 +90,9 @@ class CartLineNormalizer {
 data class NormalizedCartLine(
     val productCode: Int,
     val quantity: Int
+)
+
+data class CheckoutHeader(
+    val customerAddressId: String,
+    val paymentTermId: String
 )
