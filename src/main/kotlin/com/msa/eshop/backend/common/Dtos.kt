@@ -324,3 +324,41 @@ data class DashboardDto(
     val carts: Long,
     val revenue: Long
 )
+data class PageMetaDto(
+    val page: Int,
+    val size: Int,
+    val totalItems: Long,
+    val totalPages: Int,
+    val hasNext: Boolean,
+    val hasPrevious: Boolean
+)
+
+data class PageResponseDto<T>(
+    val items: List<T>,
+    val meta: PageMetaDto
+)
+
+data class AdminCartSummaryDto(
+    val id: String,
+    val cartCode: Int,
+    val customerId: String?,
+    val customerCode: String,
+    val customerName: String,
+    val customerAddress: String,
+    val paymentTermId: String?,
+    val paymentTermName: String,
+    val statusName: String,
+    val statusColor: String,
+    val salesDate: String,
+    val subtotal: Int,
+    val discountTotal: Int,
+    val taxTotal: Int,
+    val total: Int,
+    val itemCount: Int,
+    val createdAt: String
+)
+
+data class UpdateCartStatusRequest(
+    val status: String,
+    val color: String? = null
+)

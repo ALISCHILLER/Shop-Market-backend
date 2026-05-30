@@ -56,6 +56,20 @@ class GlobalExceptionHandler {
             )
     }
 
+    @ExceptionHandler(ArithmeticException::class)
+    fun handleArithmetic(exception: ArithmeticException): ResponseEntity<BaseResponse<Nothing>> {
+        logger.warn("Arithmetic error", exception)
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(
+                BaseResponse(
+                    data = null,
+                    hasError = true,
+                    message = "مقدار عددی ارسال‌شده یا محاسبه‌شده بیش از حد مجاز است"
+                )
+            )
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleUnknown(exception: Exception): ResponseEntity<BaseResponse<Nothing>> {
         logger.error("Unhandled backend error", exception)

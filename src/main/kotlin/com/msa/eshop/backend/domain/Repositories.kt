@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDate
 import java.util.UUID
-
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 interface CustomerRepository : JpaRepository<Customer, UUID> {
     fun findByCustomerCode(customerCode: String): Customer?
     fun existsByCustomerCode(customerCode: String): Boolean
@@ -119,8 +120,41 @@ interface CartRepository : JpaRepository<Cart, UUID> {
         @Param("toDate") toDate: LocalDate?
     ): List<Cart>
 
+    @EntityGraph(attributePaths = ["customer", "address", "paymentTerm"])
+    @Query(
+        """
+        select c from Cart c
+        where (:cartCode is null or c.cartCode = :cartCode)
+          and (:customerSearch is null
+               or lower(c.customerNameSnapshot) like lower(concat('%', :customerSearch, '%'))
+               or lower(c.customer.customerCode) like lower(concat('%', :customerSearch, '%')))
+          and (:fromDate is null or c.salesDate >= :fromDate)
+          and (:toDate is null or c.salesDate <= :toDate)
+        """
+    )
+    fun findAdminCarts(
+        @Param("cartCode") cartCode: Int?,
+        @Param("customerSearch") customerSearch: String?,
+        @Param("fromDate") fromDate: LocalDate?,
+        @Param("toDate") toDate: LocalDate?,
+        pageable: Pageable
+    ): Page<Cart>
+
     @Query("select coalesce(sum(c.total), 0) from Cart c")
     fun revenue(): Long
+
+    @Query(
+        """
+        select coalesce(sum(c.total), 0)
+        from Cart c
+        where (:fromDate is null or c.salesDate >= :fromDate)
+          and (:toDate is null or c.salesDate <= :toDate)
+        """
+    )
+    fun revenueBetween(
+        @Param("fromDate") fromDate: LocalDate?,
+        @Param("toDate") toDate: LocalDate?
+    ): Long
 }
 
 interface CartItemRepository : JpaRepository<CartItem, UUID> {

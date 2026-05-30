@@ -1,6 +1,7 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
+import com.msa.eshop.backend.common.Money
 import com.msa.eshop.backend.domain.Cart
 import com.msa.eshop.backend.domain.CartItem
 import com.msa.eshop.backend.domain.CartStatus
@@ -26,6 +27,11 @@ class CartAssembler {
 
         val status = CartStatus.REGISTERED
 
+        val subtotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.gross }
+        val discountTotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.totalDiscount }
+        val taxTotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.tax }
+        val total = priceLines.fold(Money.zero()) { acc, line -> acc + line.total }
+
         val cart = Cart(
             cartCode = cartCode,
             customer = customer,
@@ -35,7 +41,11 @@ class CartAssembler {
             customerAddressSnapshot = address.customerAddress,
             statusName = status.title,
             statusColor = status.color,
-            salesDate = LocalDate.now()
+            salesDate = LocalDate.now(),
+            subtotal = subtotal.toPersistedInt(),
+            discountTotal = discountTotal.toPersistedInt(),
+            taxTotal = taxTotal.toPersistedInt(),
+            total = total.toPersistedInt()
         )
 
         priceLines.forEach { line ->
@@ -52,42 +62,8 @@ class CartAssembler {
                     total = line.total.toPersistedInt()
                 )
             )
-
-            cart.subtotal = safePlus(
-                current = cart.subtotal,
-                value = line.gross.toPersistedInt(),
-                message = "جمع مبلغ سفارش بیش از حد مجاز است"
-            )
-
-            cart.discountTotal = safePlus(
-                current = cart.discountTotal,
-                value = line.totalDiscount.toPersistedInt(),
-                message = "جمع تخفیف سفارش بیش از حد مجاز است"
-            )
-
-            cart.taxTotal = safePlus(
-                current = cart.taxTotal,
-                value = line.tax.toPersistedInt(),
-                message = "جمع مالیات سفارش بیش از حد مجاز است"
-            )
-
-            cart.total = safePlus(
-                current = cart.total,
-                value = line.total.toPersistedInt(),
-                message = "جمع نهایی سفارش بیش از حد مجاز است"
-            )
         }
 
         return cart
-    }
-
-    private fun safePlus(current: Int, value: Int, message: String): Int {
-        val result = current.toLong() + value.toLong()
-
-        if (result > Int.MAX_VALUE) {
-            throw BadRequestException(message)
-        }
-
-        return result.toInt()
     }
 }

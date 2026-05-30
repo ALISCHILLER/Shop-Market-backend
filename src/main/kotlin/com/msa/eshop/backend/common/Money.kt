@@ -11,7 +11,12 @@ data class Money(
     }
 
     operator fun plus(other: Money): Money {
-        val result = Math.addExact(value, other.value)
+        val result = runCatching {
+            Math.addExact(value, other.value)
+        }.getOrElse {
+            throw BadRequestException("مبلغ محاسبه‌شده بیش از حد مجاز است")
+        }
+
         return Money(result)
     }
 
@@ -54,7 +59,13 @@ data class Money(
             if (unitPrice < 0) throw BadRequestException("قیمت کالا معتبر نیست")
             if (quantity <= 0) throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
 
-            return Money(Math.multiplyExact(unitPrice.toLong(), quantity.toLong()))
+            val result = runCatching {
+                Math.multiplyExact(unitPrice.toLong(), quantity.toLong())
+            }.getOrElse {
+                throw BadRequestException("مبلغ محاسبه‌شده بیش از حد مجاز است")
+            }
+
+            return Money(result)
         }
     }
 }

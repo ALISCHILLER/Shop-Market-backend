@@ -35,6 +35,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
+import com.msa.eshop.backend.common.AdminCartSummaryDto
+import com.msa.eshop.backend.common.PageResponseDto
+import com.msa.eshop.backend.common.ReportCartDetailsDto
+import com.msa.eshop.backend.common.UpdateCartStatusRequest
+import com.msa.eshop.backend.service.admin.AdminCartService
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -46,7 +51,8 @@ class AdminController(
     private val productService: AdminProductService,
     private val discountService: AdminDiscountService,
     private val bannerService: AdminBannerService,
-    private val paymentTermService: AdminPaymentTermService
+    private val paymentTermService: AdminPaymentTermService,
+    private val cartService: AdminCartService,
 ) {
     @GetMapping("/dashboard")
     fun dashboard(): BaseResponse<DashboardDto> =
@@ -221,4 +227,37 @@ class AdminController(
         paymentTermService.delete(id)
         return BaseResponse(true)
     }
+
+    @GetMapping("/carts")
+    fun carts(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) cartCode: Int?,
+        @RequestParam(required = false) customerSearch: String?,
+        @RequestParam(required = false) fromDate: String?,
+        @RequestParam(required = false) toDate: String?
+    ): BaseResponse<PageResponseDto<AdminCartSummaryDto>> =
+        BaseResponse(
+            cartService.findAll(
+                page = page,
+                size = size,
+                cartCode = cartCode,
+                customerSearch = customerSearch,
+                fromDate = fromDate,
+                toDate = toDate
+            )
+        )
+
+    @GetMapping("/carts/{cartCode}")
+    fun cartDetails(
+        @PathVariable cartCode: Int
+    ): BaseResponse<List<ReportCartDetailsDto>> =
+        BaseResponse(cartService.details(cartCode))
+
+    @PutMapping("/carts/{cartCode}/status")
+    fun updateCartStatus(
+        @PathVariable cartCode: Int,
+        @Valid @RequestBody request: UpdateCartStatusRequest
+    ): BaseResponse<AdminCartSummaryDto> =
+        BaseResponse(cartService.updateStatus(cartCode, request))
 }
