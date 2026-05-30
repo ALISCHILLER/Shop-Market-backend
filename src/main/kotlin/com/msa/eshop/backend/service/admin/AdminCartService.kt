@@ -11,15 +11,19 @@ import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.parseClientDateOrNull
 import com.msa.eshop.backend.common.toPageResponse
 import com.msa.eshop.backend.domain.Cart
+import com.msa.eshop.backend.domain.CartItemRepository
 import com.msa.eshop.backend.domain.CartRepository
 import com.msa.eshop.backend.domain.CartStatus
+import com.msa.eshop.backend.service.cart.CartStatusPolicy
 import com.msa.eshop.backend.service.toDetailsDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class AdminCartService(
-    private val cartRepository: CartRepository
+    private val cartRepository: CartRepository,
+    private val cartItemRepository: CartItemRepository,
+    private val cartStatusPolicy: CartStatusPolicy
 ) {
     @Transactional(readOnly = true)
     fun findAll(
@@ -55,7 +59,19 @@ class AdminCartService(
             pageable = pageable
         )
 
-        return result.toPageResponse { it.toAdminSummaryDto() }
+        val cartIds = result.content.mapNotNull { it.id }
+        val itemCounts = if (cartIds.isEmpty()) {
+            emptyMap()
+        } else {
+            cartItemRepository.countItemsByCartIds(cartIds)
+                .associate { it.cartId to it.itemCount.toInt() }
+        }
+
+        return result.toPageResponse { cart ->
+            cart.toAdminSummaryDto(
+                itemCount = cart.id?.let { itemCounts[it] } ?: 0
+            )
+        }
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +103,7 @@ class AdminCartService(
         val currentStatus = CartStatus.normalize(cart.statusName)
         val targetStatus = CartStatus.normalize(request.status)
 
-        validateTransition(
+        cartStatusPolicy.assertCanChange(
             current = currentStatus,
             target = targetStatus
         )
@@ -95,29 +111,14 @@ class AdminCartService(
         cart.statusName = targetStatus.title
         cart.statusColor = request.color.cleanOrNull() ?: targetStatus.color
 
-        return cartRepository.save(cart).toAdminSummaryDto()
+        val saved = cartRepository.save(cart)
+
+        return saved.toAdminSummaryDto(
+            itemCount = saved.items.size
+        )
     }
 
-    private fun validateTransition(
-        current: CartStatus,
-        target: CartStatus
-    ) {
-        if (current == target) return
-
-        if (current == CartStatus.CANCELLED) {
-            throw BadRequestException("سفارش لغو شده قابل تغییر وضعیت نیست")
-        }
-
-        if (current == CartStatus.DELIVERED) {
-            throw BadRequestException("سفارش تحویل شده قابل تغییر وضعیت نیست")
-        }
-
-        if (current == CartStatus.REGISTERED && target == CartStatus.DELIVERED) {
-            throw BadRequestException("سفارش ثبت شده باید ابتدا وارد مرحله بررسی شود")
-        }
-    }
-
-    private fun Cart.toAdminSummaryDto(): AdminCartSummaryDto =
+    private fun Cart.toAdminSummaryDto(itemCount: Int): AdminCartSummaryDto =
         AdminCartSummaryDto(
             id = requireNotNull(id).toString(),
             cartCode = cartCode,
@@ -134,7 +135,7 @@ class AdminCartService(
             discountTotal = discountTotal,
             taxTotal = taxTotal,
             total = total,
-            itemCount = items.size,
+            itemCount = itemCount,
             createdAt = createdAt.toString()
         )
 }

@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -36,6 +38,19 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(BaseResponse(data = null, hasError = true, message = message))
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleTypeMismatch(exception: MethodArgumentTypeMismatchException): ResponseEntity<BaseResponse<Nothing>> {
+        val name = exception.name
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(BaseResponse(data = null, hasError = true, message = "مقدار پارامتر $name معتبر نیست"))
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException::class)
+    fun handleMissingParameter(exception: MissingServletRequestParameterException): ResponseEntity<BaseResponse<Nothing>> =
+        ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(BaseResponse(data = null, hasError = true, message = "پارامتر ${exception.parameterName} الزامی است"))
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleUnreadableBody(exception: HttpMessageNotReadableException): ResponseEntity<BaseResponse<Nothing>> =

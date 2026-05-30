@@ -45,10 +45,10 @@ fun validateGeoPair(latitude: Double?, longitude: Double?) {
 }
 
 fun String?.parseClientDateOrNull(): LocalDate? {
-    val value = this?.trim()?.normalizeDigits().orEmpty()
-    if (value.isBlank()) return null
+    val raw = this?.trim()?.normalizeDigits().orEmpty()
+    if (raw.isBlank()) return null
 
-    val normalized = value
+    val normalized = raw
         .replace('/', '-')
         .replace('.', '-')
 
@@ -58,10 +58,12 @@ fun String?.parseClientDateOrNull(): LocalDate? {
         val month = parts[1].toIntOrNull()
         val day = parts[2].toIntOrNull()
 
-        if (year != null && month != null && day != null) {
-            if (year in 1200..1700) {
-                return PersianDateConverter.toGregorian(year, month, day)
-            }
+        if (year == null || month == null || day == null) {
+            throw BadRequestException("فرمت تاریخ معتبر نیست")
+        }
+
+        if (year in 1200..1700) {
+            return PersianDateConverter.toGregorian(year, month, day)
         }
     }
 
@@ -71,9 +73,11 @@ fun String?.parseClientDateOrNull(): LocalDate? {
         DateTimeFormatter.ofPattern("yyyy-MM-dd")
     )
 
-    return patterns.firstNotNullOfOrNull { formatter ->
+    val parsed = patterns.firstNotNullOfOrNull { formatter ->
         runCatching { LocalDate.parse(normalized, formatter) }.getOrNull()
     }
+
+    return parsed ?: throw BadRequestException("فرمت تاریخ معتبر نیست")
 }
 
 fun String.normalizeDigits(): String =
@@ -108,7 +112,12 @@ object PersianDateConverter {
 
     fun toGregorian(jy: Int, jm: Int, jd: Int): LocalDate {
         if (jm !in 1..12) throw BadRequestException("ماه تاریخ معتبر نیست")
-        if (jd !in 1..31) throw BadRequestException("روز تاریخ معتبر نیست")
+        if (jd < 1) throw BadRequestException("روز تاریخ معتبر نیست")
+
+        val maxDay = if (jm <= 6) 31 else if (jm <= 11) 30 else 29
+        if (jd > maxDay) {
+            throw BadRequestException("روز تاریخ معتبر نیست")
+        }
 
         val jy2 = jy - 979
         val jm2 = jm - 1

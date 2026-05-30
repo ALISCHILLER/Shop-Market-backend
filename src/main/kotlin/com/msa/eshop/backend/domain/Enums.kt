@@ -8,9 +8,16 @@ enum class CustomerRole {
 
     companion object {
         fun normalize(value: String?): CustomerRole {
-            return when (value?.trim()?.uppercase()?.removePrefix("ROLE_")) {
+            val normalized = value
+                ?.trim()
+                ?.uppercase()
+                ?.removePrefix("ROLE_")
+                ?.takeIf { it.isNotBlank() }
+                ?: return CUSTOMER
+
+            return when (normalized) {
                 "ADMIN" -> ADMIN
-                null, "", "CUSTOMER" -> CUSTOMER
+                "CUSTOMER" -> CUSTOMER
                 else -> throw BadRequestException("نقش کاربر معتبر نیست")
             }
         }
@@ -34,20 +41,23 @@ enum class CartStatus(
 
     companion object {
         fun normalize(value: String?): CartStatus {
-            val normalized = value
+            val raw = value
                 ?.trim()
-                ?.uppercase()
-                ?.replace(" ", "_")
+                ?.takeIf { it.isNotBlank() }
                 ?: throw BadRequestException("وضعیت سفارش الزامی است")
 
+            val normalized = raw
+                .uppercase()
+                .replace(" ", "_")
+                .replace("-", "_")
+
             return entries.firstOrNull { status ->
-                status.name == normalized ||
-                        status.title == value.trim()
-            } ?: when (value.trim()) {
+                status.name == normalized || status.title == raw
+            } ?: when (raw) {
                 "ثبت", "ثبت‌شده", "ثبت شده" -> REGISTERED
-                "درحال بررسی", "در حال بررسی", "پردازش" -> PROCESSING
-                "لغو", "لغو شده", "باطل" -> CANCELLED
-                "تحویل", "تحویل شده", "ارسال شده" -> DELIVERED
+                "بررسی", "درحال بررسی", "در حال بررسی", "پردازش" -> PROCESSING
+                "لغو", "لغو‌شده", "لغو شده", "باطل" -> CANCELLED
+                "تحویل", "تحویل‌شده", "تحویل شده", "ارسال شده" -> DELIVERED
                 else -> throw BadRequestException("وضعیت سفارش معتبر نیست")
             }
         }

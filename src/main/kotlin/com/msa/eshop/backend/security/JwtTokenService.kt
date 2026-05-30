@@ -47,6 +47,13 @@ class JwtTokenService(
             val parts = token.split('.')
             if (parts.size != 3) return null
 
+            val headerBytes = decoder.decode(parts[0])
+            val header = objectMapper.readValue(headerBytes, JwtHeader::class.java)
+
+            if (header.alg != JWT_ALGORITHM || header.typ != JWT_TYPE) {
+                return null
+            }
+
             val signingInput = "${parts[0]}.${parts[1]}"
 
             val expectedSignatureBytes = signToBytes(signingInput)
@@ -98,10 +105,9 @@ data class JwtClaims(
     val userId: String,
     val role: String
 )
-
-private data class JwtHeader(
-    val alg: String,
-    val typ: String
+data class JwtHeader(
+    val alg: String = "",
+    val typ: String = ""
 )
 
 private data class JwtPayload(

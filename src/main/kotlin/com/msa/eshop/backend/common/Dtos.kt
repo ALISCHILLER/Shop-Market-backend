@@ -362,3 +362,19 @@ data class UpdateCartStatusRequest(
     val status: String,
     val color: String? = null
 )
+data class AdminCustomerSearchRequest(
+    val page: Int = 0,
+    val size: Int = 20,
+    val search: String? = null,
+    val role: String? = null,
+    val enabled: Boolean? = null
+)
+
+data class AdminProductSearchRequest(
+    val page: Int = 0,
+    val size: Int = 20,
+    val search: String? = null,
+    val productGroupCode: Int? = null,
+    val isDiscounts: Boolean? = null,
+    val isTax: Boolean? = null
+)

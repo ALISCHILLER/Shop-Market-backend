@@ -2,9 +2,12 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.PageResponseDto
 import com.msa.eshop.backend.common.ProductDto
 import com.msa.eshop.backend.common.UpsertProductRequest
 import com.msa.eshop.backend.common.cleanOrNull
+import com.msa.eshop.backend.common.createPageable
+import com.msa.eshop.backend.common.toPageResponse
 import com.msa.eshop.backend.domain.CartItemRepository
 import com.msa.eshop.backend.domain.Product
 import com.msa.eshop.backend.domain.ProductCategoryRepository
@@ -113,5 +116,32 @@ class AdminProductService(
         if (!categoryRepository.existsById(code)) {
             throw BadRequestException("دسته‌بندی کالا پیدا نشد")
         }
+    }
+    @Transactional(readOnly = true)
+    fun search(
+        page: Int,
+        size: Int,
+        search: String?,
+        productGroupCode: Int?,
+        isDiscounts: Boolean?,
+        isTax: Boolean?
+    ): PageResponseDto<ProductDto> {
+        if (productGroupCode != null && productGroupCode <= 0) {
+            throw BadRequestException("کد گروه کالا معتبر نیست")
+        }
+
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = "productName"
+        )
+
+        return productRepository.searchAdminProducts(
+            search = search.cleanOrNull(),
+            productGroupCode = productGroupCode,
+            isDiscounts = isDiscounts,
+            isTax = isTax,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
     }
 }

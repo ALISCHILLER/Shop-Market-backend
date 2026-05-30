@@ -2,10 +2,13 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.PageResponseDto
 import com.msa.eshop.backend.common.UpsertCustomerRequest
 import com.msa.eshop.backend.common.UserDto
 import com.msa.eshop.backend.common.cleanOrNull
 import com.msa.eshop.backend.common.cleanRequired
+import com.msa.eshop.backend.common.createPageable
+import com.msa.eshop.backend.common.toPageResponse
 import com.msa.eshop.backend.domain.CartRepository
 import com.msa.eshop.backend.domain.Customer
 import com.msa.eshop.backend.domain.CustomerAddressRepository
@@ -122,5 +125,31 @@ class AdminCustomerService(
         const val DEFAULT_PASSWORD = "123456"
         const val PASSWORD_ALGORITHM = "bcrypt"
         const val MIN_PASSWORD_LENGTH = 6
+    }
+
+    @Transactional(readOnly = true)
+    fun search(
+        page: Int,
+        size: Int,
+        search: String?,
+        role: String?,
+        enabled: Boolean?
+    ): PageResponseDto<UserDto> {
+        val normalizedRole = role
+            .cleanOrNull()
+            ?.let { CustomerRole.normalize(it).name }
+
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = "createdAt"
+        )
+
+        return customerRepository.searchAdminCustomers(
+            search = search.cleanOrNull(),
+            role = normalizedRole,
+            enabled = enabled,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
     }
 }

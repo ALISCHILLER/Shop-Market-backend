@@ -260,4 +260,42 @@ class AdminController(
         @Valid @RequestBody request: UpdateCartStatusRequest
     ): BaseResponse<AdminCartSummaryDto> =
         BaseResponse(cartService.updateStatus(cartCode, request))
+
+    @GetMapping("/customers/page")
+    fun customersPage(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) role: String?,
+        @RequestParam(required = false) enabled: Boolean?
+    ): BaseResponse<PageResponseDto<UserDto>> =
+        BaseResponse(
+            customerService.search(
+                page = page,
+                size = size,
+                search = search,
+                role = role,
+                enabled = enabled
+            )
+        )
+
+    @GetMapping("/products/page")
+    fun productsPage(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) productGroupCode: Int?,
+        @RequestParam(required = false) isDiscounts: Boolean?,
+        @RequestParam(required = false) isTax: Boolean?
+    ): BaseResponse<PageResponseDto<ProductDto>> =
+        BaseResponse(
+            productService.search(
+                page = page,
+                size = size,
+                search = search,
+                productGroupCode = productGroupCode,
+                isDiscounts = isDiscounts,
+                isTax = isTax
+            )
+        )
 }
