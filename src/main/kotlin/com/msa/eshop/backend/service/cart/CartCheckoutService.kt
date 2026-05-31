@@ -1,17 +1,12 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.toUuidOrBadRequest
 import com.msa.eshop.backend.domain.CartRepository
 import com.msa.eshop.backend.domain.CustomerAddressRepository
-import com.msa.eshop.backend.domain.PaymentTermRepository
 import com.msa.eshop.backend.service.CurrentUserService
-import com.msa.eshop.backend.service.PricingRequest
-import com.msa.eshop.backend.service.PricingService
-import com.msa.eshop.backend.service.catalog.ProductResolver
-import com.msa.eshop.backend.service.pricing.PaymentKindResolver
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -25,6 +20,7 @@ class CartCheckoutService(
     private val cartPricingCalculator: CartPricingCalculator,
     private val cartAssembler: CartAssembler
 ) {
+
     @Transactional
     fun checkout(requests: List<InsertCartModelRequest>): Boolean {
         val header = cartLineNormalizer.extractCheckoutHeader(requests)
@@ -32,8 +28,11 @@ class CartCheckoutService(
 
         val currentCustomer = currentUserService.requireCustomer()
 
-        val addressId = header.customerAddressId.toUuidOrBadRequest("شناسه آدرس معتبر نیست")
-        val paymentTermId = header.paymentTermId.toUuidOrBadRequest("شناسه روش پرداخت معتبر نیست")
+        val addressId = header.customerAddressId
+            .toUuidOrBadRequest("شناسه آدرس معتبر نیست")
+
+        val paymentTermId = header.paymentTermId
+            .toUuidOrBadRequest("شناسه روش پرداخت معتبر نیست")
 
         val address = addressRepository.findById(addressId)
             .orElseThrow { NotFoundException("آدرس سفارش پیدا نشد") }
@@ -57,6 +56,7 @@ class CartCheckoutService(
         )
 
         cartRepository.save(cart)
+
         return true
     }
 }

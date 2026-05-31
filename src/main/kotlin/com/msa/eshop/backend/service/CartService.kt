@@ -1,5 +1,7 @@
 package com.msa.eshop.backend.service
 
+import com.msa.eshop.backend.common.dtos.CartSimulateRequest
+import com.msa.eshop.backend.common.dtos.CartSimulateResponse
 import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.dtos.OrderAddressDto
 import com.msa.eshop.backend.common.dtos.PaymentTermDto
@@ -19,6 +21,9 @@ class CartService(
 ) {
     fun simulate(requests: List<SimulateModelRequest>): List<SimulateDto> =
         cartQueryService.simulate(requests)
+
+    fun simulateModern(request: CartSimulateRequest): CartSimulateResponse =
+        cartQueryService.simulateModern(request)
 
     fun currentCustomerAddresses(): List<OrderAddressDto> =
         cartQueryService.currentCustomerAddresses()

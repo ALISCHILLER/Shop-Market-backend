@@ -2,7 +2,6 @@ package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.Money
-import com.msa.eshop.backend.domain.PaymentKind
 import com.msa.eshop.backend.domain.PaymentTerm
 import com.msa.eshop.backend.domain.PaymentTermRepository
 import com.msa.eshop.backend.service.PricingRequest
@@ -28,7 +27,7 @@ class CartPricingCalculator(
         }
 
         val paymentTerm = resolvePaymentTerm(request.paymentTermId)
-        val paymentKind = resolvePaymentKind(paymentTerm)
+        val paymentKind = paymentKindResolver.resolve(paymentTerm)
 
         val productsByCode = productResolver.requireByCodes(
             request.lines.map { it.productCode }
@@ -52,8 +51,18 @@ class CartPricingCalculator(
             acc + line.gross
         }
 
-        val discountTotal = priceLines.fold(Money.zero()) { acc, line ->
-            acc + line.totalDiscount
+        val productDiscountTotal = priceLines.fold(Money.zero()) { acc, line ->
+            acc + line.productDiscount
+        }
+
+        val paymentDiscountTotal = priceLines.fold(Money.zero()) { acc, line ->
+            acc + line.paymentDiscount
+        }
+
+        val discountTotal = productDiscountTotal + paymentDiscountTotal
+
+        val taxableAmount = priceLines.fold(Money.zero()) { acc, line ->
+            acc + line.taxableAmount
         }
 
         val taxTotal = priceLines.fold(Money.zero()) { acc, line ->
@@ -69,26 +78,17 @@ class CartPricingCalculator(
             paymentKind = paymentKind,
             priceLines = priceLines,
             subtotal = subtotal,
+            productDiscountTotal = productDiscountTotal,
+            paymentDiscountTotal = paymentDiscountTotal,
             discountTotal = discountTotal,
+            taxableAmount = taxableAmount,
             taxTotal = taxTotal,
             total = total
         )
     }
 
-    private fun resolvePaymentTerm(paymentTermId: UUID?): PaymentTerm? {
-        if (paymentTermId == null) {
-            return paymentTermRepository.findFirstByActiveTrueOrderByDeadLineAsc()
-        }
-
+    private fun resolvePaymentTerm(paymentTermId: UUID): PaymentTerm {
         return paymentTermRepository.findByIdAndActiveTrue(paymentTermId)
             ?: throw BadRequestException("روش پرداخت انتخاب‌شده معتبر یا فعال نیست")
-    }
-
-    private fun resolvePaymentKind(paymentTerm: PaymentTerm?): PaymentKind {
-        if (paymentTerm == null) {
-            return PaymentKind.RECEIPT
-        }
-
-        return paymentKindResolver.resolve(paymentTerm)
     }
 }

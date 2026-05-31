@@ -22,17 +22,15 @@ class CartAssembler {
             throw BadRequestException("سبد خرید خالی است")
         }
 
-        val paymentTerm = pricingResult.paymentTerm
-            ?: throw BadRequestException("روش پرداخت برای ثبت سفارش الزامی است")
-
         val cart = Cart(
             cartCode = cartCode,
             customer = customer,
             address = address,
-            paymentTerm = paymentTerm,
+            paymentTerm = pricingResult.paymentTerm,
             customerNameSnapshot = customer.customerName.ifBlank { customer.customerCode },
             customerAddressSnapshot = address.customerAddress,
             salesDate = LocalDate.now(),
+
             subtotal = pricingResult.subtotal.toPersistedLong(),
             discountTotal = pricingResult.discountTotal.toPersistedLong(),
             taxTotal = pricingResult.taxTotal.toPersistedLong(),

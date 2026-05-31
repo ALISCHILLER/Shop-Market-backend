@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-
+import org.junit.jupiter.api.Assertions.assertThrows
 class BackendUtilsDateTest {
 
     @Test
@@ -25,8 +25,8 @@ class BackendUtilsDateTest {
 
     @Test
     fun `parse should reject invalid date`() {
-        val result = "invalid-date".parseClientDateOrNull()
-
-        assertNull(result)
+        assertThrows(BadRequestException::class.java) {
+            "invalid-date".parseClientDateOrNull()
+        }
     }
 }

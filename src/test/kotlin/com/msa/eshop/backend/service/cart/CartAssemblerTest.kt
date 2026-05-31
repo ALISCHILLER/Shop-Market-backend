@@ -23,7 +23,10 @@ class CartAssemblerTest {
             paymentKind = PaymentKind.RECEIPT,
             priceLines = emptyList(),
             subtotal = Money.zero(),
+            productDiscountTotal = Money.zero(),
+            paymentDiscountTotal = Money.zero(),
             discountTotal = Money.zero(),
+            taxableAmount = Money.zero(),
             taxTotal = Money.zero(),
             total = Money.zero()
         )
@@ -38,27 +41,6 @@ class CartAssemblerTest {
         }
     }
 
-    @Test
-    fun `assemble should reject missing payment term`() {
-        val pricingResult = CartPricingResult(
-            paymentTerm = null,
-            paymentKind = PaymentKind.RECEIPT,
-            priceLines = listOf(createPriceLine()),
-            subtotal = Money(200_000),
-            discountTotal = Money(29_000),
-            taxTotal = Money(15_390),
-            total = Money(186_390)
-        )
-
-        assertThrows(BadRequestException::class.java) {
-            assembler.assemble(
-                cartCode = 100001,
-                customer = createCustomer(),
-                address = createAddress(),
-                pricingResult = pricingResult
-            )
-        }
-    }
 
     @Test
     fun `assemble should calculate cart totals from pricing result`() {
@@ -67,7 +49,10 @@ class CartAssemblerTest {
             paymentKind = PaymentKind.RECEIPT,
             priceLines = listOf(createPriceLine()),
             subtotal = Money(200_000),
+            productDiscountTotal = Money(20_000),
+            paymentDiscountTotal = Money(9_000),
             discountTotal = Money(29_000),
+            taxableAmount = Money(171_000),
             taxTotal = Money(15_390),
             total = Money(186_390)
         )
@@ -95,7 +80,10 @@ class CartAssemblerTest {
             paymentKind = PaymentKind.RECEIPT,
             priceLines = listOf(createPriceLine()),
             subtotal = Money(200_000),
+            productDiscountTotal = Money(20_000),
+            paymentDiscountTotal = Money(9_000),
             discountTotal = Money(29_000),
+            taxableAmount = Money(171_000),
             taxTotal = Money(15_390),
             total = Money(186_390)
         )

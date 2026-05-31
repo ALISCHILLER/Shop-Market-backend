@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class CartLineNormalizer {
+
     fun normalizeSimulateLines(requests: List<SimulateModelRequest>): List<NormalizedCartLine> {
         if (requests.isEmpty()) {
             throw BadRequestException("سبد خرید خالی است")
@@ -27,6 +28,7 @@ class CartLineNormalizer {
                     quantity = quantity
                 )
             }
+            .sortedBy { it.productCode }
     }
 
     fun normalizeCheckoutLines(requests: List<InsertCartModelRequest>): List<NormalizedCartLine> {
@@ -34,7 +36,11 @@ class CartLineNormalizer {
             throw BadRequestException("سبد خرید خالی است")
         }
 
-        validateSameHeader(requests)
+        validateSameCheckoutHeader(requests)
+
+        requests.forEach {
+            validateLine(it.productCode, it.quantity)
+        }
 
         return requests
             .groupBy { it.productCode }
@@ -47,6 +53,7 @@ class CartLineNormalizer {
                     quantity = quantity
                 )
             }
+            .sortedBy { it.productCode }
     }
 
     fun extractCheckoutHeader(requests: List<InsertCartModelRequest>): CheckoutHeader {
@@ -64,32 +71,6 @@ class CartLineNormalizer {
                 throw BadRequestException("شناسه روش پرداخت الزامی است")
             }
         )
-    }
-
-    private fun validateSameHeader(requests: List<InsertCartModelRequest>) {
-        val header = extractCheckoutHeader(requests)
-
-        requests.forEach { item ->
-            if (item.customerAddressId.trim() != header.customerAddressId) {
-                throw BadRequestException("همه آیتم‌های سبد باید یک آدرس مشترک داشته باشند")
-            }
-
-            if (item.paymentTermId.trim() != header.paymentTermId) {
-                throw BadRequestException("همه آیتم‌های سبد باید یک روش پرداخت مشترک داشته باشند")
-            }
-
-            validateLine(item.productCode, item.quantity)
-        }
-    }
-
-    private fun validateLine(productCode: Int, quantity: Int) {
-        if (productCode <= 0) {
-            throw BadRequestException("کد کالا معتبر نیست")
-        }
-
-        if (quantity <= 0) {
-            throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
-        }
     }
 
     fun extractSimulateHeader(requests: List<SimulateModelRequest>): SimulateHeader {
@@ -110,6 +91,29 @@ class CartLineNormalizer {
         )
     }
 
+    private fun validateSameCheckoutHeader(requests: List<InsertCartModelRequest>) {
+        val header = extractCheckoutHeader(requests)
+
+        requests.forEach { item ->
+            if (item.customerAddressId.trim() != header.customerAddressId) {
+                throw BadRequestException("همه آیتم‌های سبد باید یک آدرس مشترک داشته باشند")
+            }
+
+            if (item.paymentTermId.trim() != header.paymentTermId) {
+                throw BadRequestException("همه آیتم‌های سبد باید یک روش پرداخت مشترک داشته باشند")
+            }
+        }
+    }
+
+    private fun validateLine(productCode: Int, quantity: Int) {
+        if (productCode <= 0) {
+            throw BadRequestException("کد کالا معتبر نیست")
+        }
+
+        if (quantity <= 0) {
+            throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
+        }
+    }
 }
 
 data class NormalizedCartLine(

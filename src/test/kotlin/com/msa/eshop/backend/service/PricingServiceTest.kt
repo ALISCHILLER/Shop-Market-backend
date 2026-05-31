@@ -56,15 +56,15 @@ class PricingServiceTest {
             paymentKind = PaymentKind.RECEIPT
         )
 
-        assertEquals(200_000, result.gross.value)
+        assertEquals(200_000L, result.gross.value)
         assertEquals(10, result.productDiscountPercent)
-        assertEquals(20_000, result.productDiscount.value)
-        assertEquals(180_000, result.afterProductDiscount.value)
+        assertEquals(20_000L, result.productDiscount.value)
+        assertEquals(180_000L, result.afterProductDiscount.value)
         assertEquals(5, result.paymentDiscountPercent)
-        assertEquals(9_000, result.paymentDiscount.value)
-        assertEquals(171_000, result.taxableAmount.value)
-        assertEquals(15_390, result.tax.value)
-        assertEquals(186_390, result.total.value)
+        assertEquals(9_000L, result.paymentDiscount.value)
+        assertEquals(171_000L, result.taxableAmount.value)
+        assertEquals(15_390L, result.tax.value)
+        assertEquals(186_390L, result.total.value)
     }
 
     @Test
@@ -74,7 +74,7 @@ class PricingServiceTest {
         val product = Product(
             productName = "No Tax Product",
             productCode = 1002,
-            price = 100_000,
+            price = 100_000L,
             isDiscounts = false,
             isTax = false
         ).apply {
@@ -91,8 +91,8 @@ class PricingServiceTest {
             paymentKind = PaymentKind.RECEIPT
         )
 
-        assertEquals(100_000, result.gross.value)
-        assertEquals(0, result.tax.value)
-        assertEquals(100_000, result.total.value)
+        assertEquals(100_000L, result.gross.value)
+        assertEquals(0L, result.tax.value)
+        assertEquals(100_000L, result.total.value)
     }
 }

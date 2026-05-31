@@ -1,12 +1,15 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.SimulateResultModel
-import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
+import com.msa.eshop.backend.common.BaseResponse
 import com.msa.eshop.backend.common.InsertCartModelResponse
 import com.msa.eshop.backend.common.PaymentTermResponse
 import com.msa.eshop.backend.common.ReportCartDetailsResponse
-import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerModelRequest
 import com.msa.eshop.backend.common.ReportHistoryCustomerResponse
+import com.msa.eshop.backend.common.SimulateResultModel
+import com.msa.eshop.backend.common.dtos.CartSimulateRequest
+import com.msa.eshop.backend.common.dtos.CartSimulateResponse
+import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
+import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerModelRequest
 import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import com.msa.eshop.backend.service.CartService
 import jakarta.validation.Valid
@@ -29,6 +32,16 @@ class CartController(
         @Valid @RequestBody request: List<@Valid SimulateModelRequest>
     ): SimulateResultModel =
         SimulateResultModel(cartService.simulate(request))
+
+    @PostMapping("/Simulate")
+    fun simulateModern(
+        @Valid @RequestBody request: CartSimulateRequest
+    ): BaseResponse<CartSimulateResponse> =
+        BaseResponse(
+            data = cartService.simulateModern(request),
+            hasError = false,
+            message = null
+        )
 
     @GetMapping("/GetPaymentTerm")
     fun paymentTerms(): PaymentTermResponse =

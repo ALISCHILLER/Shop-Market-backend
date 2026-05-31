@@ -7,16 +7,22 @@ import com.msa.eshop.backend.service.PriceLine
 import java.util.UUID
 
 data class CartPricingRequest(
-    val paymentTermId: UUID?,
+    val paymentTermId: UUID,
     val lines: List<NormalizedCartLine>
 )
 
 data class CartPricingResult(
-    val paymentTerm: PaymentTerm?,
+    val paymentTerm: PaymentTerm,
     val paymentKind: PaymentKind,
     val priceLines: List<PriceLine>,
+
     val subtotal: Money,
+
+    val productDiscountTotal: Money,
+    val paymentDiscountTotal: Money,
     val discountTotal: Money,
+
+    val taxableAmount: Money,
     val taxTotal: Money,
     val total: Money
 )
