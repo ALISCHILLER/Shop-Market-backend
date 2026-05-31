@@ -83,4 +83,29 @@ open class Product(
         foreignKey = ForeignKey(name = "fk_products_product_category")
     )
     open var category: ProductCategory? = null
-) : AuditableUuidEntity()
+) : AuditableUuidEntity(){
+    fun changePrice(newPrice: Long) {
+        require(newPrice >= 0) { "Product price cannot be negative" }
+        price = newPrice
+    }
+
+    fun enableTax() {
+        isTax = true
+    }
+
+    fun disableTax() {
+        isTax = false
+    }
+
+    fun enableDiscounts() {
+        isDiscounts = true
+    }
+
+    fun disableDiscounts() {
+        isDiscounts = false
+    }
+
+    fun updateImage(imageUrl: String?) {
+        productImage = imageUrl?.trim()?.takeIf { it.isNotBlank() }
+    }
+}

@@ -6,9 +6,9 @@ set password_change_required = true
 where password_hash like '{plain}%';
 
 create table if not exists refresh_tokens (
-                                              id uuid primary key,
-                                              customer_id uuid not null references customers(id),
-    token_hash varchar(255) not null,
+    id uuid primary key,
+    customer_id uuid not null references customers(id),
+    token_hash varchar(255) not null unique,
     expires_at timestamp with time zone not null,
     revoked_at timestamp with time zone,
                              ip_address varchar(64),

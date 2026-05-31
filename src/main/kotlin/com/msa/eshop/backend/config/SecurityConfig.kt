@@ -67,6 +67,8 @@ class SecurityConfig(
             auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/User/loginUser").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/User/refresh").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/User/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/Product/**", "/api/v1/Banner/**").permitAll()
                 .requestMatchers("/actuator/health/**").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")

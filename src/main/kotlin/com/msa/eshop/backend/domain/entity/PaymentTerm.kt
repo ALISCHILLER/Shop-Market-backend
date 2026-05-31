@@ -34,4 +34,22 @@ open class PaymentTerm(
 
     @Column(name = "active", nullable = false)
     open var active: Boolean = true
-) : AuditableUuidEntity()
+) : AuditableUuidEntity(){
+    fun isImmediate(): Boolean =
+        deadLine == 0
+
+    fun discountPercentFor(kind: PaymentKind): Int =
+        when (kind) {
+            PaymentKind.IMMEDIATE -> immediateDiscountPercent
+            PaymentKind.RECEIPT -> receiptDiscountPercent
+            PaymentKind.CHEQUE -> chequeDiscountPercent
+        }
+
+    fun activate() {
+        active = true
+    }
+
+    fun deactivate() {
+        active = false
+    }
+}

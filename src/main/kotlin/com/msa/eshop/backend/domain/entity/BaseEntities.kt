@@ -16,6 +16,9 @@ abstract class BaseUuidEntity {
     @UuidGenerator
     @Column(columnDefinition = "uuid", nullable = false, updatable = false)
     open var id: UUID? = null
+
+    fun requireId(): UUID =
+        requireNotNull(id) { "Entity id is not assigned yet" }
 }
 
 @MappedSuperclass

@@ -36,4 +36,23 @@ open class Discount(
 
     @Column(name = "end_number", nullable = false)
     open var endNumber: Int = Int.MAX_VALUE
-) : AuditableUuidEntity()
+) : AuditableUuidEntity(){
+    fun appliesTo(quantity: Int): Boolean =
+        quantity in fromNumber..endNumber
+
+    fun updateRange(
+        fromNumber: Int,
+        endNumber: Int
+    ) {
+        require(fromNumber >= 1) { "Discount range must start from 1 or more" }
+        require(endNumber >= fromNumber) { "Discount end number must be greater than or equal to from number" }
+
+        this.fromNumber = fromNumber
+        this.endNumber = endNumber
+    }
+
+    fun updatePercent(percent: Int) {
+        require(percent in 0..100) { "Discount percent must be between 0 and 100" }
+        discountPercent = percent
+    }
+}

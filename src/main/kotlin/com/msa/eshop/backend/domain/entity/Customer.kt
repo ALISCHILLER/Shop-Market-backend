@@ -63,4 +63,47 @@ open class Customer(
 
     fun isAdmin(): Boolean =
         CustomerRole.normalize(role) == CustomerRole.ADMIN
+
+    fun enable() {
+        enabled = true
+    }
+
+    fun disable() {
+        enabled = false
+    }
+
+    fun markPasswordChangeRequired() {
+        passwordChangeRequired = true
+    }
+
+    fun clearPasswordChangeRequired() {
+        passwordChangeRequired = false
+    }
+
+    fun changePasswordHash(
+        encodedPassword: String,
+        algorithm: String = "bcrypt",
+        requireChange: Boolean
+    ) {
+        passwordHash = encodedPassword
+        salt = algorithm
+        passwordChangeRequired = requireChange
+    }
+
+    fun updateBasicInfo(
+        customerCode: String,
+        customerName: String,
+        mobile: String?,
+        phone: String?,
+        center: String?,
+        nationalCode: String?
+    ) {
+        this.customerCode = customerCode
+        this.customerName = customerName
+        this.mobile = mobile
+        this.phone = phone
+        this.center = center
+        this.nationalCode = nationalCode
+    }
 }
+
