@@ -14,6 +14,8 @@ import com.msa.eshop.backend.domain.Customer
 import com.msa.eshop.backend.domain.CustomerAddressRepository
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.domain.CustomerRole
+import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
+import com.msa.eshop.backend.service.auth.RefreshTokenService
 import com.msa.eshop.backend.service.toDto
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -23,10 +25,13 @@ import java.util.UUID
 @Service
 class AdminCustomerService(
     private val customerRepository: CustomerRepository,
-    private val addressRepository: CustomerAddressRepository,
     private val cartRepository: CartRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val addressRepository: CustomerAddressRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val passwordPolicyValidator: PasswordPolicyValidator,
+    private val refreshTokenService: RefreshTokenService
 ) {
+
     @Transactional(readOnly = true)
     fun findAll(): List<UserDto> =
         customerRepository.findAll()
@@ -75,9 +80,12 @@ class AdminCustomerService(
         val rawPassword = request.password
             ?.trim()
             ?.takeIf { it.isNotBlank() }
-            ?: DEFAULT_PASSWORD
+            ?: throw BadRequestException("رمز عبور اولیه الزامی است")
 
-        validatePassword(rawPassword)
+        passwordPolicyValidator.validate(
+            password = rawPassword,
+            customerCode = customerCode
+        )
 
         val customer = Customer(
             customerCode = customerCode,
@@ -90,7 +98,9 @@ class AdminCustomerService(
             salt = PASSWORD_ALGORITHM,
             role = CustomerRole.normalize(request.role).name,
             enabled = request.enabled
-        )
+        ).apply {
+            passwordChangeRequired = true
+        }
 
         return customerRepository.save(customer).toDto()
     }
@@ -100,12 +110,19 @@ class AdminCustomerService(
         val customer = customerRepository.findById(id)
             .orElseThrow { NotFoundException("مشتری پیدا نشد") }
 
+        val oldCustomerCode = customer.customerCode
+        val oldRole = customer.role
+        val oldEnabled = customer.enabled
+
         val customerCode = request.customerCode.cleanRequired("کد مشتری الزامی است")
         val customerName = request.customerName.cleanRequired("نام مشتری الزامی است")
+        val normalizedRole = CustomerRole.normalize(request.role).name
 
         if (customerRepository.existsByCustomerCodeAndIdNot(customerCode, id)) {
             throw BadRequestException("کد مشتری قبلاً برای مشتری دیگری ثبت شده است")
         }
+
+        var shouldRevokeTokens = false
 
         customer.customerCode = customerCode
         customer.customerName = customerName
@@ -113,19 +130,44 @@ class AdminCustomerService(
         customer.phone = request.phone.cleanOrNull()
         customer.center = request.center.cleanOrNull()
         customer.nationalCode = request.nationalCode.cleanOrNull()
-        customer.role = CustomerRole.normalize(request.role).name
+        customer.role = normalizedRole
         customer.enabled = request.enabled
+
+        if (oldCustomerCode != customerCode) {
+            shouldRevokeTokens = true
+        }
+
+        if (oldRole != normalizedRole) {
+            shouldRevokeTokens = true
+        }
+
+        if (oldEnabled && !customer.enabled) {
+            shouldRevokeTokens = true
+        }
 
         request.password
             ?.trim()
             ?.takeIf { it.isNotBlank() }
             ?.let { newPassword ->
-                validatePassword(newPassword)
+                passwordPolicyValidator.validate(
+                    password = newPassword,
+                    customerCode = customerCode
+                )
+
                 customer.passwordHash = passwordEncoder.encode(newPassword)
                 customer.salt = PASSWORD_ALGORITHM
+                customer.passwordChangeRequired = true
+
+                shouldRevokeTokens = true
             }
 
-        return customerRepository.save(customer).toDto()
+        val savedCustomer = customerRepository.save(customer)
+
+        if (shouldRevokeTokens) {
+            refreshTokenService.revokeAllForCustomer(savedCustomer)
+        }
+
+        return savedCustomer.toDto()
     }
 
     @Transactional
@@ -142,18 +184,12 @@ class AdminCustomerService(
             addressRepository.deleteAll(addresses)
         }
 
+        refreshTokenService.deleteAllForCustomer(customer)
+
         customerRepository.delete(customer)
     }
 
-    private fun validatePassword(password: String) {
-        if (password.length < MIN_PASSWORD_LENGTH) {
-            throw BadRequestException("رمز عبور باید حداقل ۶ کاراکتر باشد")
-        }
-    }
-
     private companion object {
-        const val DEFAULT_PASSWORD = "123456"
         const val PASSWORD_ALGORITHM = "bcrypt"
-        const val MIN_PASSWORD_LENGTH = 6
     }
 }

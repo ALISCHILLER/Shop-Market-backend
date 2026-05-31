@@ -1,9 +1,13 @@
 package com.msa.eshop.backend.service
 
+import com.msa.eshop.backend.common.cleanOrNull
+import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.dtos.BannerDto
 import com.msa.eshop.backend.common.dtos.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.ProductDto
 import com.msa.eshop.backend.common.dtos.ProductGroupDto
+import com.msa.eshop.backend.common.toPageResponse
 import com.msa.eshop.backend.domain.BannerRepository
 import com.msa.eshop.backend.domain.DiscountRepository
 import com.msa.eshop.backend.domain.ProductCategoryRepository
@@ -56,4 +60,30 @@ class CatalogService(
     @Transactional(readOnly = true)
     fun getProduct(productId: UUID): ProductDto =
         productResolver.requireById(productId).toDto()
+
+    @Transactional(readOnly = true)
+    fun searchProducts(
+        page: Int,
+        size: Int,
+        search: String?,
+        categoryCode: Int?,
+        hasDiscount: Boolean?,
+        sortBy: String,
+        direction: String
+    ): PageResponseDto<ProductDto> {
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            direction = direction,
+            allowedSorts = setOf("productName", "productCode", "price", "createdAt")
+        )
+
+        return productRepository.searchPublicProducts(
+            search = search.cleanOrNull(),
+            categoryCode = categoryCode,
+            hasDiscount = hasDiscount,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
+    }
 }

@@ -2,6 +2,8 @@ package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.dtos.CartSimulateRequest
+import com.msa.eshop.backend.common.dtos.CartSimulateResponse
 import com.msa.eshop.backend.common.dtos.OrderAddressDto
 import com.msa.eshop.backend.common.dtos.PaymentTermDto
 import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
@@ -17,10 +19,6 @@ import com.msa.eshop.backend.domain.CustomerAddressRepository
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.domain.PaymentTermRepository
 import com.msa.eshop.backend.service.CurrentUserService
-import com.msa.eshop.backend.common.dtos.CartSimulateRequest
-import com.msa.eshop.backend.common.dtos.CartSimulateResponse
-import com.msa.eshop.backend.common.parseClientDateOrNull
-import com.msa.eshop.backend.common.toUuidOrBadRequest
 import com.msa.eshop.backend.service.PricingRequest
 import com.msa.eshop.backend.service.PricingService
 import com.msa.eshop.backend.service.catalog.ProductResolver
@@ -29,9 +27,6 @@ import com.msa.eshop.backend.service.toDto
 import com.msa.eshop.backend.service.toHistoryDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import com.msa.eshop.backend.service.toDetailsDto
-import com.msa.eshop.backend.service.toDto
-import com.msa.eshop.backend.service.toHistoryDto
 
 @Service
 class CartQueryService(
@@ -71,14 +66,7 @@ class CartQueryService(
     }
     @Transactional(readOnly = true)
     fun simulateModern(request: CartSimulateRequest): CartSimulateResponse {
-        val lines = request.items.map {
-            NormalizedCartLine(
-                productCode = it.productCode,
-                quantity = it.quantity
-            )
-        }
-
-        val normalizedLines = normalizeModernLines(lines)
+        val normalizedLines = cartLineNormalizer.normalizeModernLines(request.items)
 
         val pricingResult = cartPricingCalculator.calculate(
             CartPricingRequest(
@@ -153,88 +141,6 @@ class CartQueryService(
             .sortedBy { it.productCode }
             .map { it.toDetailsDto(cart) }
     }
-
-    private fun pricingServiceCompatibleLegacyDtos(
-        result: CartPricingResult
-    ): List<SimulateDto> {
-        return result.priceLines.map { line ->
-            val product = line.product
-
-            SimulateDto(
-                convertFactor1 = product.convertFactor1,
-                convertFactor2 = product.convertFactor2,
-                discountPercent = line.productDiscountPercent,
-
-                discount_Percent_PaymentTerm_Receipt = line.paymentDiscount.toPersistedLong(),
-                discount_Percent_PaymentTerm_Receipt_Tax = line.tax.toPersistedLong(),
-
-                discount_Percent_PaymentTerm_cheque = line.paymentDiscount.toPersistedLong(),
-                discount_Percent_PaymentTerm_cheque_Tax = line.tax.toPersistedLong(),
-
-                discount_Percent_PaymentTerm_immediate = line.paymentDiscount.toPersistedLong(),
-                discount_Percent_PaymentTerm_immediate_Tax = line.tax.toPersistedLong(),
-
-                finalPrice = line.total.toPersistedLong(),
-                finalPriceDiscount = line.afterProductDiscount.toPersistedLong(),
-
-                fullNameKala1 = product.fullNameKala1.orEmpty(),
-                fullNameKala2 = product.fullNameKala2.orEmpty(),
-
-                id = requireNotNull(product.id).toString(),
-                isTax = product.isTax,
-
-                paymentTermId = result.paymentTerm?.id?.toString(),
-
-                price = line.gross.toPersistedLong(),
-                priceByDiscountPercent = line.afterProductDiscount.toPersistedLong(),
-                priceByDiscountPercentAndTax = (line.afterProductDiscount + line.taxWithoutPaymentDiscount).toPersistedLong(),
-
-                priceByDiscountPercentAndTax_Receipt = line.total.toPersistedLong(),
-                priceByDiscountPercentAndTax_cheque = line.total.toPersistedLong(),
-                priceByDiscountPercentAndTax_immediate = line.total.toPersistedLong(),
-
-                priceDiscount = line.productDiscount.toPersistedLong(),
-
-                productCode = product.productCode,
-                productGroupCode = product.productGroupCode,
-                productImage = product.productImage.orEmpty(),
-                productName = product.productName.orEmpty(),
-
-                quantity = line.quantity,
-
-                unit1 = product.unit1.orEmpty(),
-                unit2 = product.unit2.orEmpty(),
-                unitid1 = product.unitid1.orEmpty(),
-                unitid2 = product.unitid2.orEmpty()
-            )
-        }
-    }
-
-    private fun normalizeModernLines(lines: List<NormalizedCartLine>): List<NormalizedCartLine> {
-        if (lines.isEmpty()) {
-            throw BadRequestException("سبد خرید خالی است")
-        }
-
-        return lines
-            .onEach {
-                if (it.productCode <= 0) {
-                    throw BadRequestException("کد کالا معتبر نیست")
-                }
-
-                if (it.quantity <= 0) {
-                    throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
-                }
-            }
-            .groupBy { it.productCode }
-            .map { (productCode, rows) ->
-                NormalizedCartLine(
-                    productCode = productCode,
-                    quantity = rows.sumOf { it.quantity }
-                )
-            }
-            .sortedBy { it.productCode }
-    }
-
     private fun resolveLegacySimulatePaymentTerm(header: SimulateHeader) =
         header.paymentTermId
             ?.toUuidOrBadRequest("شناسه روش پرداخت معتبر نیست")

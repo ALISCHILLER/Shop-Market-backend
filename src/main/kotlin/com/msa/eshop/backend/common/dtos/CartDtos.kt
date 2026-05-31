@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
 import java.util.UUID
-
+import jakarta.validation.Valid
 data class SimulateModelRequest(
     val paymentTermId: String? = null,
 
@@ -16,6 +16,7 @@ data class SimulateModelRequest(
     val quantity: Int
 )
 data class CartSimulateRequest(
+    @field:Valid
     @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
     val items: List<CartSimulateLineRequest>,
 

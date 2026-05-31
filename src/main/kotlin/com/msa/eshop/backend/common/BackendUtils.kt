@@ -106,7 +106,46 @@ fun String.normalizeDigits(): String =
             else -> it
         }
     }.joinToString("")
+private fun isJalaliLeapYear(jy: Int): Boolean {
+    val breaks = intArrayOf(
+        -61, 9, 38, 199, 426, 686, 756, 818, 1111,
+        1181, 1210, 1635, 2060, 2097, 2192, 2262,
+        2324, 2394, 2456, 3178
+    )
 
+    var bl = breaks.size
+    var jp = breaks[0]
+    var jm: Int
+    var jump = 0
+
+    if (jy < jp || jy >= breaks[bl - 1]) {
+        return false
+    }
+
+    var n = 0
+    for (i in 1 until bl) {
+        jm = breaks[i]
+        jump = jm - jp
+
+        if (jy < jm) {
+            n = jy - jp
+            break
+        }
+
+        jp = jm
+    }
+
+    if (jump - n < 6) {
+        n = n - jump + ((jump + 4) / 33) * 33
+    }
+
+    var leap = (((n + 1) % 33) - 1) % 4
+    if (leap == -1) {
+        leap = 4
+    }
+
+    return leap == 0
+}
 object PersianDateConverter {
     private val jalaliMonthDays = intArrayOf(31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29)
 
@@ -114,7 +153,13 @@ object PersianDateConverter {
         if (jm !in 1..12) throw BadRequestException("ماه تاریخ معتبر نیست")
         if (jd < 1) throw BadRequestException("روز تاریخ معتبر نیست")
 
-        val maxDay = if (jm <= 6) 31 else if (jm <= 11) 30 else 29
+        val maxDay = when {
+            jm <= 6 -> 31
+            jm <= 11 -> 30
+            isJalaliLeapYear(jy) -> 30
+            else -> 29
+        }
+
         if (jd > maxDay) {
             throw BadRequestException("روز تاریخ معتبر نیست")
         }

@@ -1,5 +1,6 @@
 package com.msa.eshop.backend.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Profile
@@ -8,8 +9,10 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("prod")
 class StartupValidation(
-    private val jwtProperties: JwtProperties
+    private val jwtProperties: JwtProperties,
+    @Value("\${app.cors.allowed-origins:*}") private val allowedOrigins: String
 ) : ApplicationRunner {
+
     override fun run(args: ApplicationArguments?) {
         val secret = jwtProperties.secret.trim()
 
@@ -23,6 +26,15 @@ class StartupValidation(
 
         if (jwtProperties.expirationMinutes <= 0) {
             error("ESHOP_JWT_EXPIRATION_MINUTES must be greater than zero")
+        }
+
+        val origins = allowedOrigins
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        if (origins.contains("*")) {
+            error("CORS_ALLOWED_ORIGINS must not be '*' in prod profile")
         }
     }
 }

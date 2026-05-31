@@ -12,7 +12,8 @@ import com.msa.eshop.backend.service.pricing.PaymentKindResolver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import java.util.Optional
+import com.msa.eshop.backend.common.BadRequestException
+import org.junit.jupiter.api.Assertions.assertThrows
 import java.util.UUID
 
 class CartPricingCalculatorTest {
@@ -87,5 +88,27 @@ class CartPricingCalculatorTest {
         assertEquals(190_000L, result.taxableAmount.value)
         assertEquals(17_100L, result.taxTotal.value)
         assertEquals(207_100L, result.total.value)
+    }
+
+    @Test
+    fun `calculate should reject inactive or missing payment term`() {
+        val paymentTermId = UUID.randomUUID()
+
+        Mockito.`when`(paymentTermRepository.findByIdAndActiveTrue(paymentTermId))
+            .thenReturn(null)
+
+        assertThrows(BadRequestException::class.java) {
+            calculator.calculate(
+                CartPricingRequest(
+                    paymentTermId = paymentTermId,
+                    lines = listOf(
+                        NormalizedCartLine(
+                            productCode = 1001,
+                            quantity = 1
+                        )
+                    )
+                )
+            )
+        }
     }
 }

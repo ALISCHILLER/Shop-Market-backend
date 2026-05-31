@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import com.msa.eshop.backend.common.dtos.CartSimulateLineRequest
 
 class CartLineNormalizerTest {
 
@@ -131,5 +132,21 @@ class CartLineNormalizerTest {
         assertThrows(BadRequestException::class.java) {
             normalizer.normalizeSimulateLines(requests)
         }
+    }
+    @Test
+    fun `normalizeModernLines should merge duplicate product codes`() {
+        val lines = listOf(
+            CartSimulateLineRequest(productCode = 1001, quantity = 1),
+            CartSimulateLineRequest(productCode = 1001, quantity = 2),
+            CartSimulateLineRequest(productCode = 1002, quantity = 1)
+        )
+
+        val result = normalizer.normalizeModernLines(lines)
+
+        assertEquals(2, result.size)
+        assertEquals(1001, result[0].productCode)
+        assertEquals(3, result[0].quantity)
+        assertEquals(1002, result[1].productCode)
+        assertEquals(1, result[1].quantity)
     }
 }

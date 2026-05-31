@@ -68,6 +68,23 @@ interface ProductRepository : JpaRepository<Product, UUID> {
         @Param("isTax") isTax: Boolean?,
         pageable: Pageable
     ): Page<Product>
+
+    @Query(
+        """
+    select p from Product p
+    where (:search is null
+           or lower(coalesce(p.productName, '')) like lower(concat('%', :search, '%'))
+           or cast(p.productCode as string) like concat('%', :search, '%'))
+      and (:categoryCode is null or p.productGroupCode = :categoryCode)
+      and (:hasDiscount is null or p.isDiscounts = :hasDiscount)
+    """
+    )
+    fun searchPublicProducts(
+        @Param("search") search: String?,
+        @Param("categoryCode") categoryCode: Int?,
+        @Param("hasDiscount") hasDiscount: Boolean?,
+        pageable: Pageable
+    ): Page<Product>
 }
 
 interface DiscountRepository : JpaRepository<Discount, UUID> {
@@ -212,6 +229,21 @@ interface CartItemRepository : JpaRepository<CartItem, UUID> {
     fun countItemsByCartIds(
         @Param("cartIds") cartIds: Collection<UUID>
     ): List<CartItemCountProjection>
+}
+
+interface RefreshTokenRepository : JpaRepository<RefreshToken, UUID> {
+
+    fun findByTokenHash(tokenHash: String): RefreshToken?
+
+    fun findByCustomerIdAndRevokedAtIsNull(
+        customerId: UUID
+    ): List<RefreshToken>
+
+    @Modifying
+    @Query("delete from RefreshToken rt where rt.customer.id = :customerId")
+    fun deleteByCustomerId(
+        @Param("customerId") customerId: UUID
+    ): Int
 }
 
 interface CartItemCountProjection {

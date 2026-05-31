@@ -4,7 +4,7 @@ import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import org.springframework.stereotype.Component
-
+import com.msa.eshop.backend.common.dtos.CartSimulateLineRequest
 @Component
 class CartLineNormalizer {
 
@@ -113,6 +113,28 @@ class CartLineNormalizer {
         if (quantity <= 0) {
             throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
         }
+    }
+    fun normalizeModernLines(lines: List<CartSimulateLineRequest>): List<NormalizedCartLine> {
+        if (lines.isEmpty()) {
+            throw BadRequestException("سبد خرید خالی است")
+        }
+
+        lines.forEach {
+            validateLine(it.productCode, it.quantity)
+        }
+
+        return lines
+            .groupBy { it.productCode }
+            .map { (productCode, rows) ->
+                val quantity = rows.sumOf { it.quantity }
+                validateLine(productCode, quantity)
+
+                NormalizedCartLine(
+                    productCode = productCode,
+                    quantity = quantity
+                )
+            }
+            .sortedBy { it.productCode }
     }
 }
 

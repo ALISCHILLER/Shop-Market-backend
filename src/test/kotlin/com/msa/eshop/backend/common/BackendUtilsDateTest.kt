@@ -29,4 +29,16 @@ class BackendUtilsDateTest {
             "invalid-date".parseClientDateOrNull()
         }
     }
+    @Test
+    fun `parse should accept esfand 30 in leap jalali year`() {
+        val result = "1403/12/30".parseClientDateOrNull()
+
+        assertEquals(LocalDate.of(2025, 3, 20), result)
+    }
+    @Test
+    fun `parse should reject esfand 30 in non leap jalali year`() {
+        assertThrows(BadRequestException::class.java) {
+            "1404/12/30".parseClientDateOrNull()
+        }
+    }
 }

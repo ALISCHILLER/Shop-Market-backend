@@ -48,6 +48,9 @@ open class Customer(
     @Column(name = "salt", length = 255)
     open var salt: String? = null,
 
+    @Column(name = "password_change_required", nullable = false)
+    open var passwordChangeRequired: Boolean = false,
+
     @Column(name = "role", nullable = false, length = 32)
     open var role: String = CustomerRole.CUSTOMER.name,
 
