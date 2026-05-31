@@ -16,7 +16,7 @@ import java.util.UUID
 @Service
 class PricingService(
     private val discountRepository: DiscountRepository,
-    @Value("\${app.invoice.tax-percent:9}") private val taxPercent: Int
+    @param:Value("\${app.invoice.tax-percent:9}") private val taxPercent: Int
 ) {
     init {
         taxPercent.requirePercent("درصد مالیات معتبر نیست")

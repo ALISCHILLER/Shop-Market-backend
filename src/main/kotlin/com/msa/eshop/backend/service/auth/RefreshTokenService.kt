@@ -15,7 +15,7 @@ import java.util.Base64
 @Service
 class RefreshTokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
-    @Value("\${app.auth.refresh-token-expiration-days:30}")
+    @param:Value("\${app.auth.refresh-token-expiration-days:30}")
     private val refreshTokenExpirationDays: Long
 ) {
 

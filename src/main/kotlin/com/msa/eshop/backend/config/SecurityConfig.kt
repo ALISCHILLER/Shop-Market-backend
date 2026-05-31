@@ -26,7 +26,7 @@ class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val restAuthenticationEntryPoint: RestAuthenticationEntryPoint,
     private val restAccessDeniedHandler: RestAccessDeniedHandler,
-    @Value("\${app.cors.allowed-origins:*}") private val allowedOrigins: String
+    @param:Value("\${app.cors.allowed-origins:*}") private val allowedOrigins: String
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder(12)

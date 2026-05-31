@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class OpenApiConfig(
-    @Value("\${info.app.version:2.0.0}") private val appVersion: String
+    @param:Value("\${info.app.version:2.0.0}") private val appVersion: String
 ) {
     @Bean
     fun openApi(): OpenAPI {

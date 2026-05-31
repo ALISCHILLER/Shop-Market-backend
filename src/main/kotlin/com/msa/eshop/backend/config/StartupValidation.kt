@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 @Profile("prod")
 class StartupValidation(
     private val jwtProperties: JwtProperties,
-    @Value("\${app.cors.allowed-origins:*}") private val allowedOrigins: String
+    @param:Value("\${app.cors.allowed-origins:*}") private val allowedOrigins: String
 ) : ApplicationRunner {
 
     override fun run(args: ApplicationArguments?) {

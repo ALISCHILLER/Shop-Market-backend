@@ -8,6 +8,7 @@ import java.util.UUID
 
 @Component
 class CartAccessPolicy {
+
     fun assertCanReadCustomerHistory(current: Customer, targetCustomerId: UUID) {
         if (current.isAdmin()) return
 
@@ -23,7 +24,4 @@ class CartAccessPolicy {
             throw BadRequestException("دسترسی به جزئیات این سفارش مجاز نیست")
         }
     }
-
-    private fun Customer.isAdmin(): Boolean =
-        role.equals("ADMIN", ignoreCase = true)
 }
