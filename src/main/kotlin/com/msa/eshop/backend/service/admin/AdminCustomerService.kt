@@ -14,6 +14,7 @@ import com.msa.eshop.backend.domain.Customer
 import com.msa.eshop.backend.domain.CustomerAddressRepository
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.domain.CustomerRole
+import com.msa.eshop.backend.service.audit.AuditLogService
 import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
 import com.msa.eshop.backend.service.auth.RefreshTokenService
 import com.msa.eshop.backend.service.toDto
@@ -29,7 +30,8 @@ class AdminCustomerService(
     private val addressRepository: CustomerAddressRepository,
     private val passwordEncoder: PasswordEncoder,
     private val passwordPolicyValidator: PasswordPolicyValidator,
-    private val refreshTokenService: RefreshTokenService
+    private val refreshTokenService: RefreshTokenService,
+    private val auditLogService: AuditLogService
 ) {
 
     @Transactional(readOnly = true)
@@ -100,14 +102,21 @@ class AdminCustomerService(
             role = normalizedRole,
             enabled = request.enabled
         ).apply {
-            /*
-             * چون رمز توسط admin تعیین شده، کاربر باید بعد از ورود
-             * رمز خودش را تغییر بدهد.
-             */
             passwordChangeRequired = true
         }
 
-        return customerRepository.save(customer).toDto()
+        val savedCustomer = customerRepository.save(customer)
+
+        auditLogService.record(
+            action = "CUSTOMER_CREATED",
+            entityType = ENTITY_TYPE_CUSTOMER,
+            entityId = savedCustomer.id?.toString(),
+            oldValue = null,
+            newValue = customerSnapshot(savedCustomer),
+            description = "Customer created by admin"
+        )
+
+        return savedCustomer.toDto()
     }
 
     @Transactional
@@ -115,6 +124,7 @@ class AdminCustomerService(
         val customer = customerRepository.findById(id)
             .orElseThrow { NotFoundException("مشتری پیدا نشد") }
 
+        val oldSnapshot = customerSnapshot(customer)
         val oldCustomerCode = customer.customerCode
         val oldRole = customer.role
         val oldEnabled = customer.enabled
@@ -128,6 +138,7 @@ class AdminCustomerService(
         }
 
         var shouldRevokeTokens = false
+        var passwordChanged = false
 
         customer.customerCode = customerCode
         customer.customerName = customerName
@@ -164,6 +175,7 @@ class AdminCustomerService(
             customer.salt = PASSWORD_ALGORITHM
             customer.passwordChangeRequired = true
 
+            passwordChanged = true
             shouldRevokeTokens = true
         }
 
@@ -172,6 +184,18 @@ class AdminCustomerService(
         if (shouldRevokeTokens) {
             refreshTokenService.revokeAllForCustomer(savedCustomer)
         }
+
+        auditLogService.record(
+            action = "CUSTOMER_UPDATED",
+            entityType = ENTITY_TYPE_CUSTOMER,
+            entityId = savedCustomer.id?.toString(),
+            oldValue = oldSnapshot,
+            newValue = customerSnapshot(savedCustomer) + mapOf(
+                "passwordChanged" to passwordChanged,
+                "tokensRevoked" to shouldRevokeTokens
+            ),
+            description = "Customer updated by admin"
+        )
 
         return savedCustomer.toDto()
     }
@@ -185,6 +209,8 @@ class AdminCustomerService(
             throw BadRequestException("این مشتری دارای سفارش است و قابل حذف نیست")
         }
 
+        val oldSnapshot = customerSnapshot(customer)
+
         val addresses = addressRepository.findByCustomerId(id)
         if (addresses.isNotEmpty()) {
             addressRepository.deleteAll(addresses)
@@ -192,13 +218,37 @@ class AdminCustomerService(
 
         refreshTokenService.deleteAllForCustomer(customer)
 
+        auditLogService.record(
+            action = "CUSTOMER_DELETED",
+            entityType = ENTITY_TYPE_CUSTOMER,
+            entityId = customer.id?.toString() ?: id.toString(),
+            oldValue = oldSnapshot,
+            newValue = null,
+            description = "Customer deleted by admin"
+        )
+
         customerRepository.delete(customer)
     }
+
+    private fun customerSnapshot(customer: Customer): Map<String, Any?> =
+        auditLogService.snapshotOf(
+            "id" to customer.id,
+            "customerCode" to customer.customerCode,
+            "customerName" to customer.customerName,
+            "mobile" to customer.mobile,
+            "phone" to customer.phone,
+            "center" to customer.center,
+            "nationalCode" to customer.nationalCode,
+            "role" to customer.role,
+            "enabled" to customer.enabled,
+            "passwordChangeRequired" to customer.passwordChangeRequired
+        )
 
     private companion object {
         const val PASSWORD_ALGORITHM = "bcrypt"
         const val DEFAULT_SORT_BY = "createdAt"
         const val DEFAULT_SORT_DIRECTION = "DESC"
+        const val ENTITY_TYPE_CUSTOMER = "Customer"
 
         val ALLOWED_SORTS = setOf(
             "createdAt",
