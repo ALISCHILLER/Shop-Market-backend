@@ -30,7 +30,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eshop}
       DB_USERNAME: ${POSTGRES_USER:-eshop}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-eshop}
-      ESHOP_JWT_SECRET: ${ESHOP_JWT_SECRET:-change-me-to-a-very-long-secret-at-least-64-bytes-for-production}
+      ESHOP_JWT_SECRET: ${ESHOP_JWT_SECRET:?Set ESHOP_JWT_SECRET in .env before running docker compose}
       ESHOP_JWT_EXPIRATION_MINUTES: ${ESHOP_JWT_EXPIRATION_MINUTES:-1440}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
     ports:
