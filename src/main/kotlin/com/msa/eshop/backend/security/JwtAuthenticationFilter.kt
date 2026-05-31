@@ -1,7 +1,7 @@
 package com.msa.eshop.backend.security
 
-import com.msa.eshop.backend.domain.CustomerRepository
-import com.msa.eshop.backend.domain.CustomerRole
+import com.msa.eshop.backend.domain.repository.CustomerRepository
+import com.msa.eshop.backend.domain.entity.CustomerRole
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

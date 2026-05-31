@@ -1,7 +1,7 @@
 package com.msa.eshop.backend.service.pricing
 
-import com.msa.eshop.backend.domain.PaymentKind
-import com.msa.eshop.backend.domain.PaymentTerm
+import com.msa.eshop.backend.domain.entity.PaymentKind
+import com.msa.eshop.backend.domain.entity.PaymentTerm
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

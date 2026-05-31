@@ -1,11 +1,11 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.domain.Cart
-import com.msa.eshop.backend.domain.CartItem
-import com.msa.eshop.backend.domain.CartStatus
-import com.msa.eshop.backend.domain.Customer
-import com.msa.eshop.backend.domain.CustomerAddress
+import com.msa.eshop.backend.domain.entity.Cart
+import com.msa.eshop.backend.domain.entity.CartItem
+import com.msa.eshop.backend.domain.entity.CartStatus
+import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.entity.CustomerAddress
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 

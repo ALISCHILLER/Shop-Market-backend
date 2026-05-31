@@ -1,6 +1,6 @@
 package com.msa.eshop.backend.service
 
-import com.msa.eshop.backend.domain.CustomerRepository
+import com.msa.eshop.backend.domain.repository.CustomerRepository
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.security.crypto.password.PasswordEncoder

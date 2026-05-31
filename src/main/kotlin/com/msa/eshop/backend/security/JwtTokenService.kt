@@ -2,7 +2,7 @@ package com.msa.eshop.backend.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.msa.eshop.backend.config.JwtProperties
-import com.msa.eshop.backend.domain.Customer
+import com.msa.eshop.backend.domain.entity.Customer
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import java.time.Instant

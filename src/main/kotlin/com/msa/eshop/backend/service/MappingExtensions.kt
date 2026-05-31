@@ -9,15 +9,15 @@ import com.msa.eshop.backend.common.dtos.ProductGroupDto
 import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
 import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerDto
 import com.msa.eshop.backend.common.dtos.UserDto
-import com.msa.eshop.backend.domain.Banner
-import com.msa.eshop.backend.domain.Cart
-import com.msa.eshop.backend.domain.CartItem
-import com.msa.eshop.backend.domain.Customer
-import com.msa.eshop.backend.domain.CustomerAddress
-import com.msa.eshop.backend.domain.Discount
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.Product
-import com.msa.eshop.backend.domain.ProductCategory
+import com.msa.eshop.backend.domain.entity.Banner
+import com.msa.eshop.backend.domain.entity.Cart
+import com.msa.eshop.backend.domain.entity.CartItem
+import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.entity.CustomerAddress
+import com.msa.eshop.backend.domain.entity.Discount
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.entity.Product
+import com.msa.eshop.backend.domain.entity.ProductCategory
 
 fun Customer.toDto(): UserDto = UserDto(
     id = requireNotNull(id).toString(),

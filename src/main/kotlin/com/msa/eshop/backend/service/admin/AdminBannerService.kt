@@ -5,8 +5,8 @@ import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.cleanRequired
 import com.msa.eshop.backend.common.dtos.BannerDto
 import com.msa.eshop.backend.common.dtos.UpsertBannerRequest
-import com.msa.eshop.backend.domain.Banner
-import com.msa.eshop.backend.domain.BannerRepository
+import com.msa.eshop.backend.domain.entity.Banner
+import com.msa.eshop.backend.domain.repository.BannerRepository
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

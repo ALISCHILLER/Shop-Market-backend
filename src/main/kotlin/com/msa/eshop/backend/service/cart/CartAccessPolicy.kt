@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.domain.Cart
-import com.msa.eshop.backend.domain.Customer
+import com.msa.eshop.backend.domain.entity.Cart
+import com.msa.eshop.backend.domain.entity.Customer
 import org.springframework.stereotype.Component
 import java.util.UUID
 

@@ -6,9 +6,9 @@ import com.msa.eshop.backend.common.dtos.PaymentTermDto
 import com.msa.eshop.backend.common.dtos.UpsertPaymentTermRequest
 import com.msa.eshop.backend.common.cleanRequired
 import com.msa.eshop.backend.common.requirePercent
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.PaymentTermRepository
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.repository.PaymentTermRepository
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

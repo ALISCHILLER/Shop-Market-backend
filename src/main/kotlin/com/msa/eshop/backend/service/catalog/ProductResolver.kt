@@ -2,8 +2,8 @@ package com.msa.eshop.backend.service.catalog
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.domain.Product
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.domain.entity.Product
+import com.msa.eshop.backend.domain.repository.ProductRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 

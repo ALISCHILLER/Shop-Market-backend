@@ -7,10 +7,10 @@ import com.msa.eshop.backend.common.dtos.OrderAddressDto
 import com.msa.eshop.backend.common.dtos.UpsertAddressRequest
 import com.msa.eshop.backend.common.toUuidOrBadRequest
 import com.msa.eshop.backend.common.validateGeoPair
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.CustomerAddress
-import com.msa.eshop.backend.domain.CustomerAddressRepository
-import com.msa.eshop.backend.domain.CustomerRepository
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.entity.CustomerAddress
+import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
+import com.msa.eshop.backend.domain.repository.CustomerRepository
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

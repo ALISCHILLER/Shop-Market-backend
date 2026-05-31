@@ -2,10 +2,10 @@ package com.msa.eshop.backend.service.admin
 
 
 import com.msa.eshop.backend.common.dtos.DashboardDto
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.CustomerRepository
-import com.msa.eshop.backend.domain.ProductCategoryRepository
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.repository.CustomerRepository
+import com.msa.eshop.backend.domain.repository.ProductCategoryRepository
+import com.msa.eshop.backend.domain.repository.ProductRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

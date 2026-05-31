@@ -1,4 +1,4 @@
-package com.msa.eshop.backend.domain
+package com.msa.eshop.backend.domain.entity
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column

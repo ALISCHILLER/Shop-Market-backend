@@ -13,11 +13,11 @@ import com.msa.eshop.backend.common.dtos.SimulateDto
 import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import com.msa.eshop.backend.common.parseClientDateOrNull
 import com.msa.eshop.backend.common.toUuidOrBadRequest
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.CustomerAddress
-import com.msa.eshop.backend.domain.CustomerAddressRepository
-import com.msa.eshop.backend.domain.CustomerRepository
-import com.msa.eshop.backend.domain.PaymentTermRepository
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.entity.CustomerAddress
+import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
+import com.msa.eshop.backend.domain.repository.CustomerRepository
+import com.msa.eshop.backend.domain.repository.PaymentTermRepository
 import com.msa.eshop.backend.service.CurrentUserService
 import com.msa.eshop.backend.service.PricingRequest
 import com.msa.eshop.backend.service.PricingService

@@ -3,9 +3,9 @@ package com.msa.eshop.backend.service.admin.mapper
 
 import com.msa.eshop.backend.common.dtos.AdminCartSummaryDto
 import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
-import com.msa.eshop.backend.domain.Cart
-import com.msa.eshop.backend.domain.CartItem
-import com.msa.eshop.backend.domain.CartStatus
+import com.msa.eshop.backend.domain.entity.Cart
+import com.msa.eshop.backend.domain.entity.CartItem
+import com.msa.eshop.backend.domain.entity.CartStatus
 import org.springframework.stereotype.Component
 
 @Component

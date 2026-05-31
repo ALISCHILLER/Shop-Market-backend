@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.Money
-import com.msa.eshop.backend.domain.PaymentKind
-import com.msa.eshop.backend.domain.PaymentTerm
+import com.msa.eshop.backend.domain.entity.PaymentKind
+import com.msa.eshop.backend.domain.entity.PaymentTerm
 import com.msa.eshop.backend.service.PriceLine
 import java.util.UUID
 

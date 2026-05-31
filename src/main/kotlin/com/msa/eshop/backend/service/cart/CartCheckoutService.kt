@@ -4,8 +4,8 @@ import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.toUuidOrBadRequest
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.CustomerAddressRepository
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
 import com.msa.eshop.backend.service.CurrentUserService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

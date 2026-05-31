@@ -9,11 +9,11 @@ import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.UpsertCustomerRequest
 import com.msa.eshop.backend.common.dtos.UserDto
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.Customer
-import com.msa.eshop.backend.domain.CustomerAddressRepository
-import com.msa.eshop.backend.domain.CustomerRepository
-import com.msa.eshop.backend.domain.CustomerRole
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
+import com.msa.eshop.backend.domain.repository.CustomerRepository
+import com.msa.eshop.backend.domain.entity.CustomerRole
 import com.msa.eshop.backend.service.audit.AuditLogService
 import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
 import com.msa.eshop.backend.service.auth.RefreshTokenService

@@ -11,9 +11,9 @@ import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
 import com.msa.eshop.backend.common.dtos.UpdateCartStatusRequest
 import com.msa.eshop.backend.common.parseClientDateOrNull
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.CartItemRepository
-import com.msa.eshop.backend.domain.CartRepository
-import com.msa.eshop.backend.domain.CartStatus
+import com.msa.eshop.backend.domain.repository.CartItemRepository
+import com.msa.eshop.backend.domain.repository.CartRepository
+import com.msa.eshop.backend.domain.entity.CartStatus
 import com.msa.eshop.backend.service.admin.mapper.AdminCartMapper
 import com.msa.eshop.backend.service.cart.CartStatusPolicy
 import org.springframework.stereotype.Service

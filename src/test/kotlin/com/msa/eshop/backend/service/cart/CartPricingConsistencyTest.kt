@@ -1,11 +1,11 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.Money
-import com.msa.eshop.backend.domain.Customer
-import com.msa.eshop.backend.domain.CustomerAddress
-import com.msa.eshop.backend.domain.PaymentKind
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.Product
+import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.entity.CustomerAddress
+import com.msa.eshop.backend.domain.entity.PaymentKind
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.entity.Product
 import com.msa.eshop.backend.service.PriceLine
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

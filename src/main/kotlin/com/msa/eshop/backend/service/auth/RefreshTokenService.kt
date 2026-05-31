@@ -1,9 +1,9 @@
 package com.msa.eshop.backend.service.auth
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.domain.Customer
-import com.msa.eshop.backend.domain.RefreshToken
-import com.msa.eshop.backend.domain.RefreshTokenRepository
+import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.entity.RefreshToken
+import com.msa.eshop.backend.domain.repository.RefreshTokenRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

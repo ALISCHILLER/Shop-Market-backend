@@ -1,7 +1,7 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.domain.CartStatus
+import com.msa.eshop.backend.domain.entity.CartStatus
 import org.springframework.stereotype.Component
 
 @Component

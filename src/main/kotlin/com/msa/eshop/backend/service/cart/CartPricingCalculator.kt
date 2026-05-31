@@ -2,8 +2,8 @@ package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.Money
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.PaymentTermRepository
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.repository.PaymentTermRepository
 import com.msa.eshop.backend.service.PricingRequest
 import com.msa.eshop.backend.service.PricingService
 import com.msa.eshop.backend.service.catalog.ProductResolver

@@ -1,11 +1,11 @@
 package com.msa.eshop.backend.service.cart
 
-import com.msa.eshop.backend.domain.DiscountRepository
-import com.msa.eshop.backend.domain.PaymentKind
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.PaymentTermRepository
-import com.msa.eshop.backend.domain.Product
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.domain.repository.DiscountRepository
+import com.msa.eshop.backend.domain.entity.PaymentKind
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.repository.PaymentTermRepository
+import com.msa.eshop.backend.domain.entity.Product
+import com.msa.eshop.backend.domain.repository.ProductRepository
 import com.msa.eshop.backend.service.PricingService
 import com.msa.eshop.backend.service.catalog.ProductResolver
 import com.msa.eshop.backend.service.pricing.PaymentKindResolver

@@ -1,4 +1,4 @@
-package com.msa.eshop.backend.domain
+package com.msa.eshop.backend.domain.entity
 
 import com.msa.eshop.backend.common.BadRequestException
 

@@ -8,10 +8,10 @@ import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.ProductDto
 import com.msa.eshop.backend.common.dtos.ProductGroupDto
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.BannerRepository
-import com.msa.eshop.backend.domain.DiscountRepository
-import com.msa.eshop.backend.domain.ProductCategoryRepository
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.domain.repository.BannerRepository
+import com.msa.eshop.backend.domain.repository.DiscountRepository
+import com.msa.eshop.backend.domain.repository.ProductCategoryRepository
+import com.msa.eshop.backend.domain.repository.ProductRepository
 import com.msa.eshop.backend.service.catalog.ProductResolver
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

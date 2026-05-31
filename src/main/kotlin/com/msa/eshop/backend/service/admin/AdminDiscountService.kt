@@ -6,8 +6,8 @@ import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.dtos.UpsertDiscountRequest
 import com.msa.eshop.backend.common.requireMin
 import com.msa.eshop.backend.common.requirePercent
-import com.msa.eshop.backend.domain.Discount
-import com.msa.eshop.backend.domain.DiscountRepository
+import com.msa.eshop.backend.domain.entity.Discount
+import com.msa.eshop.backend.domain.repository.DiscountRepository
 import com.msa.eshop.backend.service.catalog.ProductResolver
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service

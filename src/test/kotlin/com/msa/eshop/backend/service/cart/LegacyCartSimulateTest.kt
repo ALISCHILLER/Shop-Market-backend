@@ -1,8 +1,8 @@
 package com.msa.eshop.backend.service.cart
 
-import com.msa.eshop.backend.domain.DiscountRepository
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.Product
+import com.msa.eshop.backend.domain.repository.DiscountRepository
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.entity.Product
 import com.msa.eshop.backend.service.PricingRequest
 import com.msa.eshop.backend.service.PricingService
 import org.junit.jupiter.api.Assertions.assertTrue

@@ -3,7 +3,7 @@ package com.msa.eshop.backend.security
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.msa.eshop.backend.config.JwtProperties
-import com.msa.eshop.backend.domain.Customer
+import com.msa.eshop.backend.domain.entity.Customer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull

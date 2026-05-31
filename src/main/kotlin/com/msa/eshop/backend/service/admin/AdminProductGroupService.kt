@@ -5,9 +5,9 @@ import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.dtos.ProductGroupDto
 import com.msa.eshop.backend.common.dtos.UpsertProductGroupRequest
 import com.msa.eshop.backend.common.cleanOrNull
-import com.msa.eshop.backend.domain.ProductCategory
-import com.msa.eshop.backend.domain.ProductCategoryRepository
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.domain.entity.ProductCategory
+import com.msa.eshop.backend.domain.repository.ProductCategoryRepository
+import com.msa.eshop.backend.domain.repository.ProductRepository
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

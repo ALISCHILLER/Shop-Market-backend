@@ -7,9 +7,9 @@ import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.dtos.AuditLogDto
 import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.AuditLog
-import com.msa.eshop.backend.domain.AuditLogRepository
-import com.msa.eshop.backend.domain.Customer
+import com.msa.eshop.backend.domain.entity.AuditLog
+import com.msa.eshop.backend.domain.repository.AuditLogRepository
+import com.msa.eshop.backend.domain.entity.Customer
 import com.msa.eshop.backend.service.CurrentUserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Service

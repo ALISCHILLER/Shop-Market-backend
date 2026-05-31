@@ -8,7 +8,7 @@ import com.msa.eshop.backend.common.dtos.LogoutRequest
 import com.msa.eshop.backend.common.dtos.RefreshTokenRequest
 import com.msa.eshop.backend.common.dtos.RefreshTokenResponseDto
 import com.msa.eshop.backend.common.dtos.TokenRequest
-import com.msa.eshop.backend.domain.CustomerRepository
+import com.msa.eshop.backend.domain.repository.CustomerRepository
 import com.msa.eshop.backend.security.JwtTokenService
 import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
 import com.msa.eshop.backend.service.auth.RefreshTokenService

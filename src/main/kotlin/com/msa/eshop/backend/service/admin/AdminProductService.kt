@@ -8,10 +8,10 @@ import com.msa.eshop.backend.common.dtos.UpsertProductRequest
 import com.msa.eshop.backend.common.cleanOrNull
 import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.CartItemRepository
-import com.msa.eshop.backend.domain.Product
-import com.msa.eshop.backend.domain.ProductCategoryRepository
-import com.msa.eshop.backend.domain.ProductRepository
+import com.msa.eshop.backend.domain.repository.CartItemRepository
+import com.msa.eshop.backend.domain.entity.Product
+import com.msa.eshop.backend.domain.repository.ProductCategoryRepository
+import com.msa.eshop.backend.domain.repository.ProductRepository
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

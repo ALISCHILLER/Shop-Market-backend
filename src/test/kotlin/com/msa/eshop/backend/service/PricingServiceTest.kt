@@ -1,10 +1,10 @@
 package com.msa.eshop.backend.service
 
-import com.msa.eshop.backend.domain.Discount
-import com.msa.eshop.backend.domain.DiscountRepository
-import com.msa.eshop.backend.domain.PaymentKind
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.domain.Product
+import com.msa.eshop.backend.domain.entity.Discount
+import com.msa.eshop.backend.domain.repository.DiscountRepository
+import com.msa.eshop.backend.domain.entity.PaymentKind
+import com.msa.eshop.backend.domain.entity.PaymentTerm
+import com.msa.eshop.backend.domain.entity.Product
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
