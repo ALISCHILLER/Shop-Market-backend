@@ -39,28 +39,22 @@ data class Money(
         return Money(calculated)
     }
 
-    fun toPersistedInt(): Int {
-        if (value > Int.MAX_VALUE) {
-            throw BadRequestException("مبلغ سفارش بیش از حد مجاز است")
-        }
-
-        return value.toInt()
-    }
+    fun toPersistedLong(): Long = value
 
     companion object {
         fun zero(): Money = Money(0)
 
-        fun of(value: Int): Money {
+        fun of(value: Long): Money {
             if (value < 0) throw BadRequestException("مبلغ نمی‌تواند منفی باشد")
-            return Money(value.toLong())
+            return Money(value)
         }
 
-        fun multiply(unitPrice: Int, quantity: Int): Money {
+        fun multiply(unitPrice: Long, quantity: Int): Money {
             if (unitPrice < 0) throw BadRequestException("قیمت کالا معتبر نیست")
             if (quantity <= 0) throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
 
             val result = runCatching {
-                Math.multiplyExact(unitPrice.toLong(), quantity.toLong())
+                Math.multiplyExact(unitPrice, quantity.toLong())
             }.getOrElse {
                 throw BadRequestException("مبلغ محاسبه‌شده بیش از حد مجاز است")
             }

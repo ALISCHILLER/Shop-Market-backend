@@ -1,34 +1,29 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.Money
 import com.msa.eshop.backend.domain.Cart
 import com.msa.eshop.backend.domain.CartItem
 import com.msa.eshop.backend.domain.CartStatus
 import com.msa.eshop.backend.domain.Customer
 import com.msa.eshop.backend.domain.CustomerAddress
-import com.msa.eshop.backend.domain.PaymentTerm
-import com.msa.eshop.backend.service.PriceLine
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component
 class CartAssembler {
+
     fun assemble(
         cartCode: Int,
         customer: Customer,
         address: CustomerAddress,
-        paymentTerm: PaymentTerm,
-        priceLines: List<PriceLine>
+        pricingResult: CartPricingResult
     ): Cart {
-        if (priceLines.isEmpty()) {
+        if (pricingResult.priceLines.isEmpty()) {
             throw BadRequestException("سبد خرید خالی است")
         }
 
-        val subtotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.gross }
-        val discountTotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.totalDiscount }
-        val taxTotal = priceLines.fold(Money.zero()) { acc, line -> acc + line.tax }
-        val total = priceLines.fold(Money.zero()) { acc, line -> acc + line.total }
+        val paymentTerm = pricingResult.paymentTerm
+            ?: throw BadRequestException("روش پرداخت برای ثبت سفارش الزامی است")
 
         val cart = Cart(
             cartCode = cartCode,
@@ -38,15 +33,15 @@ class CartAssembler {
             customerNameSnapshot = customer.customerName.ifBlank { customer.customerCode },
             customerAddressSnapshot = address.customerAddress,
             salesDate = LocalDate.now(),
-            subtotal = subtotal.toPersistedInt(),
-            discountTotal = discountTotal.toPersistedInt(),
-            taxTotal = taxTotal.toPersistedInt(),
-            total = total.toPersistedInt()
+            subtotal = pricingResult.subtotal.toPersistedLong(),
+            discountTotal = pricingResult.discountTotal.toPersistedLong(),
+            taxTotal = pricingResult.taxTotal.toPersistedLong(),
+            total = pricingResult.total.toPersistedLong()
         )
 
         cart.applyStatus(CartStatus.REGISTERED)
 
-        priceLines.forEach { line ->
+        pricingResult.priceLines.forEach { line ->
             cart.addItem(
                 CartItem(
                     product = line.product,
@@ -55,9 +50,9 @@ class CartAssembler {
                     productImageUrl = line.product.productImage,
                     quantity = line.quantity,
                     price = line.product.price,
-                    discount = line.totalDiscount.toPersistedInt(),
-                    tax = line.tax.toPersistedInt(),
-                    total = line.total.toPersistedInt()
+                    discount = line.totalDiscount.toPersistedLong(),
+                    tax = line.tax.toPersistedLong(),
+                    total = line.total.toPersistedLong()
                 )
             )
         }

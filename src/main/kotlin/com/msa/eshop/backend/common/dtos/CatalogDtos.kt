@@ -17,7 +17,7 @@ data class ProductDto(
     val convertFactor2: Int,
     val unitid2: String?,
     val productGroupCode: Int,
-    val price: Int,
+    val price: Long,
     val isDiscounts: Boolean,
     val isTax: Boolean = true,
     val productImage: String?
@@ -82,7 +82,7 @@ data class UpsertProductRequest(
     val productGroupCode: Int,
 
     @field:Min(value = 0, message = "قیمت کالا معتبر نیست")
-    val price: Int,
+    val price: Long,
 
     val isDiscounts: Boolean = false,
     val isTax: Boolean = true,

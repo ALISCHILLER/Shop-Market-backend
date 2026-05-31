@@ -63,7 +63,7 @@ open class Product(
     open var productGroupCode: Int = 0,
 
     @Column(name = "price", nullable = false)
-    open var price: Int = 0,
+    open var price: Long = 0,
 
     @Column(name = "is_discounts", nullable = false)
     open var isDiscounts: Boolean = false,

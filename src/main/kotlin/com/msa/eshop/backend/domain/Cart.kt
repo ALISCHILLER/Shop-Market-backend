@@ -78,16 +78,16 @@ open class Cart(
     open var salesDate: LocalDate = LocalDate.now(),
 
     @Column(name = "subtotal", nullable = false)
-    open var subtotal: Int = 0,
+    open var subtotal: Long = 0,
 
     @Column(name = "discount_total", nullable = false)
-    open var discountTotal: Int = 0,
+    open var discountTotal: Long = 0,
 
     @Column(name = "tax_total", nullable = false)
-    open var taxTotal: Int = 0,
+    open var taxTotal: Long = 0,
 
     @Column(name = "total", nullable = false)
-    open var total: Int = 0,
+    open var total: Long = 0,
 
     @OneToMany(
         mappedBy = "cart",

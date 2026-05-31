@@ -132,6 +132,7 @@ interface PaymentTermRepository : JpaRepository<PaymentTerm, UUID> {
     fun findAllByOrderByDeadLineAscNameAsc(): List<PaymentTerm>
     fun findByActiveTrueOrderByDeadLineAsc(): List<PaymentTerm>
     fun findFirstByActiveTrueOrderByDeadLineAsc(): PaymentTerm?
+    fun findByIdAndActiveTrue(id: UUID): PaymentTerm?
 }
 
 interface CartRepository : JpaRepository<Cart, UUID> {

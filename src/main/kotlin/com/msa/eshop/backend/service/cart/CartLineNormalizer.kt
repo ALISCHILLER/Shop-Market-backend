@@ -8,7 +8,13 @@ import org.springframework.stereotype.Component
 @Component
 class CartLineNormalizer {
     fun normalizeSimulateLines(requests: List<SimulateModelRequest>): List<NormalizedCartLine> {
-        if (requests.isEmpty()) return emptyList()
+        if (requests.isEmpty()) {
+            throw BadRequestException("سبد خرید خالی است")
+        }
+
+        requests.forEach {
+            validateLine(it.productCode, it.quantity)
+        }
 
         return requests
             .groupBy { it.productCode }
@@ -85,6 +91,25 @@ class CartLineNormalizer {
             throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
         }
     }
+
+    fun extractSimulateHeader(requests: List<SimulateModelRequest>): SimulateHeader {
+        if (requests.isEmpty()) {
+            throw BadRequestException("سبد خرید خالی است")
+        }
+
+        val paymentTermIds = requests
+            .mapNotNull { it.paymentTermId?.trim()?.takeIf { id -> id.isNotBlank() } }
+            .distinct()
+
+        if (paymentTermIds.size > 1) {
+            throw BadRequestException("همه آیتم‌های شبیه‌سازی باید یک روش پرداخت مشترک داشته باشند")
+        }
+
+        return SimulateHeader(
+            paymentTermId = paymentTermIds.firstOrNull()
+        )
+    }
+
 }
 
 data class NormalizedCartLine(
@@ -95,4 +120,8 @@ data class NormalizedCartLine(
 data class CheckoutHeader(
     val customerAddressId: String,
     val paymentTermId: String
+)
+
+data class SimulateHeader(
+    val paymentTermId: String?
 )

@@ -33,30 +33,26 @@ class CartQueryService(
     private val addressRepository: CustomerAddressRepository,
     private val paymentTermRepository: PaymentTermRepository,
     private val cartRepository: CartRepository,
-    private val pricingService: PricingService,
-    private val productResolver: ProductResolver,
     private val cartAccessPolicy: CartAccessPolicy,
-    private val cartLineNormalizer: CartLineNormalizer
+    private val cartLineNormalizer: CartLineNormalizer,
+    private val cartPricingCalculator: CartPricingCalculator
 ) {
     @Transactional(readOnly = true)
     fun simulate(requests: List<SimulateModelRequest>): List<SimulateDto> {
+        val header = cartLineNormalizer.extractSimulateHeader(requests)
         val lines = cartLineNormalizer.normalizeSimulateLines(requests)
-        if (lines.isEmpty()) return emptyList()
 
-        val paymentTerm = paymentTermRepository.findFirstByActiveTrueOrderByDeadLineAsc()
-        val productsByCode = productResolver.requireByCodes(lines.map { it.productCode })
+        val paymentTermId = header.paymentTermId
+            ?.toUuidOrBadRequest("شناسه روش پرداخت معتبر نیست")
 
-        val pricingRequests = lines.map { line ->
-            PricingRequest(
-                product = productsByCode.getValue(line.productCode),
-                quantity = line.quantity
+        val result = cartPricingCalculator.calculate(
+            CartPricingRequest(
+                paymentTermId = paymentTermId,
+                lines = lines
             )
-        }
-
-        return pricingService.simulateBatch(
-            requests = pricingRequests,
-            paymentTerm = paymentTerm
         )
+
+        return pricingServiceCompatibleLegacyDtos(result)
     }
 
     @Transactional(readOnly = true)
@@ -122,5 +118,61 @@ class CartQueryService(
         return cart.items
             .sortedBy { it.productCode }
             .map { it.toDetailsDto(cart) }
+    }
+
+    private fun pricingServiceCompatibleLegacyDtos(
+        result: CartPricingResult
+    ): List<SimulateDto> {
+        return result.priceLines.map { line ->
+            val product = line.product
+
+            SimulateDto(
+                convertFactor1 = product.convertFactor1,
+                convertFactor2 = product.convertFactor2,
+                discountPercent = line.productDiscountPercent,
+
+                discount_Percent_PaymentTerm_Receipt = line.paymentDiscount.toPersistedLong(),
+                discount_Percent_PaymentTerm_Receipt_Tax = line.tax.toPersistedLong(),
+
+                discount_Percent_PaymentTerm_cheque = line.paymentDiscount.toPersistedLong(),
+                discount_Percent_PaymentTerm_cheque_Tax = line.tax.toPersistedLong(),
+
+                discount_Percent_PaymentTerm_immediate = line.paymentDiscount.toPersistedLong(),
+                discount_Percent_PaymentTerm_immediate_Tax = line.tax.toPersistedLong(),
+
+                finalPrice = line.total.toPersistedLong(),
+                finalPriceDiscount = line.afterProductDiscount.toPersistedLong(),
+
+                fullNameKala1 = product.fullNameKala1.orEmpty(),
+                fullNameKala2 = product.fullNameKala2.orEmpty(),
+
+                id = requireNotNull(product.id).toString(),
+                isTax = product.isTax,
+
+                paymentTermId = result.paymentTerm?.id?.toString(),
+
+                price = line.gross.toPersistedLong(),
+                priceByDiscountPercent = line.afterProductDiscount.toPersistedLong(),
+                priceByDiscountPercentAndTax = (line.afterProductDiscount + line.taxWithoutPaymentDiscount).toPersistedLong(),
+
+                priceByDiscountPercentAndTax_Receipt = line.total.toPersistedLong(),
+                priceByDiscountPercentAndTax_cheque = line.total.toPersistedLong(),
+                priceByDiscountPercentAndTax_immediate = line.total.toPersistedLong(),
+
+                priceDiscount = line.productDiscount.toPersistedLong(),
+
+                productCode = product.productCode,
+                productGroupCode = product.productGroupCode,
+                productImage = product.productImage.orEmpty(),
+                productName = product.productName.orEmpty(),
+
+                quantity = line.quantity,
+
+                unit1 = product.unit1.orEmpty(),
+                unit2 = product.unit2.orEmpty(),
+                unitid1 = product.unitid1.orEmpty(),
+                unitid2 = product.unitid2.orEmpty()
+            )
+        }
     }
 }

@@ -23,10 +23,10 @@ data class AdminCartSummaryDto(
     val statusName: String,
     val statusColor: String,
     val salesDate: String,
-    val subtotal: Int,
-    val discountTotal: Int,
-    val taxTotal: Int,
-    val total: Int,
+    val subtotal: Long,
+    val discountTotal: Long,
+    val taxTotal: Long,
+    val total: Long,
     val itemCount: Int,
     val createdAt: String
 )

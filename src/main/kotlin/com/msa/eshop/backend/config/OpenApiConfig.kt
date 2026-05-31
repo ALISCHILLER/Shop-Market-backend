@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class OpenApiConfig {
+class OpenApiConfig(
+    @Value("\${info.app.version:2.0.0}") private val appVersion: String
+) {
     @Bean
     fun openApi(): OpenAPI {
         val schemeName = "bearerAuth"
@@ -17,7 +19,7 @@ class OpenApiConfig {
             .info(
                 Info()
                     .title("Shop Market Compose API")
-                    .version("1.0.0")
+                    .version(appVersion)
                     .description("Android-compatible e-commerce API built with Spring Boot and Kotlin")
             )
             .components(

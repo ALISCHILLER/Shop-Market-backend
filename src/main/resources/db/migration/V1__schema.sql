@@ -35,7 +35,7 @@ create table products (
     convert_factor2 integer not null default 1,
     unitid2 varchar(64),
     product_group_code integer not null references product_categories(product_category_code),
-    price integer not null check (price >= 0),
+    price bigint not null check (price >= 0),
     is_discounts boolean not null default false,
     is_tax boolean not null default true,
     product_image text
@@ -85,10 +85,10 @@ create table carts (
     status_name varchar(128) not null,
     status_color varchar(32) not null,
     sales_date date not null,
-    subtotal integer not null default 0,
-    discount_total integer not null default 0,
-    tax_total integer not null default 0,
-    total integer not null default 0,
+    subtotal bigint not null default 0,
+    discount_total bigint not null default 0,
+    tax_total bigint not null default 0,
+    total bigint not null default 0,
     created_at timestamp with time zone not null default now()
 );
 
@@ -100,10 +100,10 @@ create table cart_items (
     product_name varchar(255) not null,
     product_image_url text,
     quantity integer not null check (quantity > 0),
-    price integer not null default 0,
-    discount integer not null default 0,
-    tax integer not null default 0,
-    total integer not null default 0
+    price bigint not null default 0,
+    discount bigint not null default 0,
+    tax bigint not null default 0,
+    total bigint not null default 0
 );
 
 create index idx_products_group_code on products(product_group_code);

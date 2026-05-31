@@ -1,3 +1,5 @@
+GRADLE_VERSION=9.1.0
+
 .PHONY: run test build clean docker-up docker-down smoke wrapper
 
 run:
@@ -13,7 +15,7 @@ clean:
 	./gradlew clean
 
 wrapper:
-	gradle wrapper --gradle-version 9.1.0
+	gradle wrapper --gradle-version $(GRADLE_VERSION)
 
 docker-up:
 	docker compose up --build

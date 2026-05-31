@@ -19,13 +19,10 @@ import org.springframework.transaction.annotation.Transactional
 class CartCheckoutService(
     private val currentUserService: CurrentUserService,
     private val addressRepository: CustomerAddressRepository,
-    private val paymentTermRepository: PaymentTermRepository,
     private val cartRepository: CartRepository,
-    private val productResolver: ProductResolver,
-    private val pricingService: PricingService,
-    private val paymentKindResolver: PaymentKindResolver,
     private val cartCodeGenerator: CartCodeGenerator,
     private val cartLineNormalizer: CartLineNormalizer,
+    private val cartPricingCalculator: CartPricingCalculator,
     private val cartAssembler: CartAssembler
 ) {
     @Transactional
@@ -45,36 +42,18 @@ class CartCheckoutService(
             throw BadRequestException("آدرس انتخاب‌شده متعلق به این مشتری نیست")
         }
 
-        val paymentTerm = paymentTermRepository.findById(paymentTermId)
-            .orElseThrow { NotFoundException("روش پرداخت پیدا نشد") }
-
-        if (!paymentTerm.active) {
-            throw BadRequestException("روش پرداخت انتخاب‌شده غیرفعال است")
-        }
-
-        val paymentKind = paymentKindResolver.resolve(paymentTerm)
-        val productsByCode = productResolver.requireByCodes(lines.map { it.productCode })
-
-        val pricingRequests = lines.map { line ->
-            PricingRequest(
-                product = productsByCode.getValue(line.productCode),
-                quantity = line.quantity,
-                paymentKind = paymentKind
+        val pricingResult = cartPricingCalculator.calculate(
+            CartPricingRequest(
+                paymentTermId = paymentTermId,
+                lines = lines
             )
-        }
-
-        val priceLines = pricingService.calculateBatch(
-            requests = pricingRequests,
-            paymentTerm = paymentTerm,
-            paymentKind = paymentKind
         )
 
         val cart = cartAssembler.assemble(
             cartCode = cartCodeGenerator.next(),
             customer = currentCustomer,
             address = address,
-            paymentTerm = paymentTerm,
-            priceLines = priceLines
+            pricingResult = pricingResult
         )
 
         cartRepository.save(cart)

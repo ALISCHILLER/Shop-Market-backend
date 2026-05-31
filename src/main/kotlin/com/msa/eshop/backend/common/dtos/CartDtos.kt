@@ -2,16 +2,34 @@ package com.msa.eshop.backend.common.dtos
 
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
+import java.util.UUID
 
 data class SimulateModelRequest(
+    val paymentTermId: String? = null,
+
     @field:NotNull(message = "کد کالا الزامی است")
     val productCode: Int,
 
     @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
     val quantity: Int
 )
+data class CartSimulateRequest(
+    @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
+    val items: List<CartSimulateLineRequest>,
 
+    @field:NotNull(message = "روش پرداخت الزامی است")
+    val paymentTermId: UUID
+)
+
+data class CartSimulateLineRequest(
+    @field:Min(value = 1, message = "کد کالا معتبر نیست")
+    val productCode: Int,
+
+    @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
+    val quantity: Int
+)
 data class InsertCartModelRequest(
     @field:NotBlank(message = "شناسه آدرس الزامی است")
     val customerAddressId: String,
@@ -36,26 +54,26 @@ data class SimulateDto(
     val convertFactor1: Int,
     val convertFactor2: Int,
     val discountPercent: Int,
-    val discount_Percent_PaymentTerm_Receipt: Int,
-    val discount_Percent_PaymentTerm_Receipt_Tax: Int,
-    val discount_Percent_PaymentTerm_cheque: Int,
-    val discount_Percent_PaymentTerm_cheque_Tax: Int,
-    val discount_Percent_PaymentTerm_immediate: Int,
-    val discount_Percent_PaymentTerm_immediate_Tax: Int,
-    val finalPrice: Int,
-    val finalPriceDiscount: Int,
+    val discount_Percent_PaymentTerm_Receipt: Long,
+    val discount_Percent_PaymentTerm_Receipt_Tax: Long,
+    val discount_Percent_PaymentTerm_cheque: Long,
+    val discount_Percent_PaymentTerm_cheque_Tax: Long,
+    val discount_Percent_PaymentTerm_immediate: Long,
+    val discount_Percent_PaymentTerm_immediate_Tax: Long,
+    val finalPrice: Long,
+    val finalPriceDiscount: Long,
     val fullNameKala1: String,
     val fullNameKala2: String,
     val id: String,
     val isTax: Boolean,
     val paymentTermId: String?,
-    val price: Int,
-    val priceByDiscountPercent: Int,
-    val priceByDiscountPercentAndTax: Int,
-    val priceByDiscountPercentAndTax_Receipt: Int,
-    val priceByDiscountPercentAndTax_cheque: Int,
-    val priceByDiscountPercentAndTax_immediate: Int,
-    val priceDiscount: Int,
+    val price: Long,
+    val priceByDiscountPercent: Long,
+    val priceByDiscountPercentAndTax: Long,
+    val priceByDiscountPercentAndTax_Receipt: Long,
+    val priceByDiscountPercentAndTax_cheque: Long,
+    val priceByDiscountPercentAndTax_immediate: Long,
+    val priceDiscount: Long,
     val productCode: Int,
     val productGroupCode: Int,
     val productImage: String,
@@ -82,15 +100,51 @@ data class ReportCartDetailsDto(
     val cartCode: Int,
     val customerAddress: String,
     val customerName: String,
-    val discount: Int,
+    val discount: Long,
     val id: String,
-    val price: Int,
+    val price: Long,
     val productCode: String,
     val productImageUrl: String,
     val productName: String,
     val quantity: Int,
     val salesDate: String,
     val statusName: String,
-    val tax: Int,
-    val total: Int
+    val tax: Long,
+    val total: Long
+)
+
+data class CartSimulateResponse(
+    val paymentTermId: UUID,
+    val paymentTermName: String,
+    val paymentKind: String,
+
+    val subtotal: Long,
+    val productDiscountTotal: Long,
+    val paymentDiscountTotal: Long,
+    val discountTotal: Long,
+    val taxableAmount: Long,
+    val taxTotal: Long,
+    val total: Long,
+
+    val items: List<CartSimulateLineResponse>
+)
+
+data class CartSimulateLineResponse(
+    val productId: UUID,
+    val productCode: Int,
+    val productName: String,
+    val quantity: Int,
+
+    val unitPrice: Long,
+    val gross: Long,
+
+    val productDiscountPercent: Int,
+    val productDiscount: Long,
+
+    val paymentDiscountPercent: Int,
+    val paymentDiscount: Long,
+
+    val taxableAmount: Long,
+    val tax: Long,
+    val total: Long
 )

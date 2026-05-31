@@ -50,14 +50,14 @@ open class CartItem(
     open var quantity: Int = 0,
 
     @Column(name = "price", nullable = false)
-    open var price: Int = 0,
+    open var price: Long = 0,
 
     @Column(name = "discount", nullable = false)
-    open var discount: Int = 0,
+    open var discount: Long = 0,
 
     @Column(name = "tax", nullable = false)
-    open var tax: Int = 0,
+    open var tax: Long = 0,
 
     @Column(name = "total", nullable = false)
-    open var total: Int = 0
+    open var total: Long = 0
 ) : AuditableUuidEntity()

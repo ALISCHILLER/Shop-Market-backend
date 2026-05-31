@@ -147,17 +147,17 @@ class PricingService(
             convertFactor2 = product.convertFactor2,
             discountPercent = receipt.productDiscountPercent,
 
-            discount_Percent_PaymentTerm_Receipt = receipt.paymentDiscount.toPersistedInt(),
-            discount_Percent_PaymentTerm_Receipt_Tax = receipt.tax.toPersistedInt(),
+            discount_Percent_PaymentTerm_Receipt = receipt.paymentDiscount.toPersistedLong(),
+            discount_Percent_PaymentTerm_Receipt_Tax = receipt.tax.toPersistedLong(),
 
-            discount_Percent_PaymentTerm_cheque = cheque.paymentDiscount.toPersistedInt(),
-            discount_Percent_PaymentTerm_cheque_Tax = cheque.tax.toPersistedInt(),
+            discount_Percent_PaymentTerm_cheque = cheque.paymentDiscount.toPersistedLong(),
+            discount_Percent_PaymentTerm_cheque_Tax = cheque.tax.toPersistedLong(),
 
-            discount_Percent_PaymentTerm_immediate = immediate.paymentDiscount.toPersistedInt(),
-            discount_Percent_PaymentTerm_immediate_Tax = immediate.tax.toPersistedInt(),
+            discount_Percent_PaymentTerm_immediate = immediate.paymentDiscount.toPersistedLong(),
+            discount_Percent_PaymentTerm_immediate_Tax = immediate.tax.toPersistedLong(),
 
-            finalPrice = receipt.gross.toPersistedInt(),
-            finalPriceDiscount = receipt.afterProductDiscount.toPersistedInt(),
+            finalPrice = receipt.gross.toPersistedLong(),
+            finalPriceDiscount = receipt.afterProductDiscount.toPersistedLong(),
 
             fullNameKala1 = product.fullNameKala1.orEmpty(),
             fullNameKala2 = product.fullNameKala2.orEmpty(),
@@ -167,15 +167,15 @@ class PricingService(
             paymentTermId = paymentTerm?.id?.toString(),
 
             price = product.price,
-            priceByDiscountPercent = receipt.afterProductDiscount.toPersistedInt(),
+            priceByDiscountPercent = receipt.afterProductDiscount.toPersistedLong(),
             priceByDiscountPercentAndTax =
-                (receipt.afterProductDiscount + receipt.taxWithoutPaymentDiscount).toPersistedInt(),
+                (receipt.afterProductDiscount + receipt.taxWithoutPaymentDiscount).toPersistedLong(),
 
-            priceByDiscountPercentAndTax_Receipt = receipt.total.toPersistedInt(),
-            priceByDiscountPercentAndTax_cheque = cheque.total.toPersistedInt(),
-            priceByDiscountPercentAndTax_immediate = immediate.total.toPersistedInt(),
+            priceByDiscountPercentAndTax_Receipt = receipt.total.toPersistedLong(),
+            priceByDiscountPercentAndTax_cheque = cheque.total.toPersistedLong(),
+            priceByDiscountPercentAndTax_immediate = immediate.total.toPersistedLong(),
 
-            priceDiscount = receipt.productDiscount.toPersistedInt(),
+            priceDiscount = receipt.productDiscount.toPersistedLong(),
 
             productCode = product.productCode,
             productGroupCode = product.productGroupCode,
