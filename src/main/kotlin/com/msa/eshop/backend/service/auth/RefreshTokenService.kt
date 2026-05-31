@@ -72,7 +72,9 @@ class RefreshTokenService(
         val customerId = requireNotNull(customer.id)
 
         refreshTokenRepository.findByCustomerIdAndRevokedAtIsNull(customerId)
-            .forEach { it.revoke() }
+            .forEach { refreshToken ->
+                refreshToken.revoke()
+            }
     }
 
     @Transactional

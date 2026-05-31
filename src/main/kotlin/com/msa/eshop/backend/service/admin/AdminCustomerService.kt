@@ -45,8 +45,8 @@ class AdminCustomerService(
         search: String?,
         role: String?,
         enabled: Boolean?,
-        sortBy: String = "createdAt",
-        direction: String = "DESC"
+        sortBy: String = DEFAULT_SORT_BY,
+        direction: String = DEFAULT_SORT_DIRECTION
     ): PageResponseDto<UserDto> {
         val normalizedRole = role
             .cleanOrNull()
@@ -57,7 +57,7 @@ class AdminCustomerService(
             size = size,
             sortBy = sortBy,
             direction = direction,
-            allowedSorts = setOf("createdAt", "customerCode", "customerName")
+            allowedSorts = ALLOWED_SORTS
         )
 
         return customerRepository.searchAdminCustomers(
@@ -72,6 +72,7 @@ class AdminCustomerService(
     fun create(request: UpsertCustomerRequest): UserDto {
         val customerCode = request.customerCode.cleanRequired("کد مشتری الزامی است")
         val customerName = request.customerName.cleanRequired("نام مشتری الزامی است")
+        val normalizedRole = CustomerRole.normalize(request.role).name
 
         if (customerRepository.existsByCustomerCode(customerCode)) {
             throw BadRequestException("کد مشتری قبلاً ثبت شده است")
@@ -96,9 +97,13 @@ class AdminCustomerService(
             nationalCode = request.nationalCode.cleanOrNull(),
             passwordHash = passwordEncoder.encode(rawPassword),
             salt = PASSWORD_ALGORITHM,
-            role = CustomerRole.normalize(request.role).name,
+            role = normalizedRole,
             enabled = request.enabled
         ).apply {
+            /*
+             * چون رمز توسط admin تعیین شده، کاربر باید بعد از ورود
+             * رمز خودش را تغییر بدهد.
+             */
             passwordChangeRequired = true
         }
 
@@ -145,21 +150,22 @@ class AdminCustomerService(
             shouldRevokeTokens = true
         }
 
-        request.password
+        val newPassword = request.password
             ?.trim()
             ?.takeIf { it.isNotBlank() }
-            ?.let { newPassword ->
-                passwordPolicyValidator.validate(
-                    password = newPassword,
-                    customerCode = customerCode
-                )
 
-                customer.passwordHash = passwordEncoder.encode(newPassword)
-                customer.salt = PASSWORD_ALGORITHM
-                customer.passwordChangeRequired = true
+        if (newPassword != null) {
+            passwordPolicyValidator.validate(
+                password = newPassword,
+                customerCode = customerCode
+            )
 
-                shouldRevokeTokens = true
-            }
+            customer.passwordHash = passwordEncoder.encode(newPassword)
+            customer.salt = PASSWORD_ALGORITHM
+            customer.passwordChangeRequired = true
+
+            shouldRevokeTokens = true
+        }
 
         val savedCustomer = customerRepository.save(customer)
 
@@ -191,5 +197,13 @@ class AdminCustomerService(
 
     private companion object {
         const val PASSWORD_ALGORITHM = "bcrypt"
+        const val DEFAULT_SORT_BY = "createdAt"
+        const val DEFAULT_SORT_DIRECTION = "DESC"
+
+        val ALLOWED_SORTS = setOf(
+            "createdAt",
+            "customerCode",
+            "customerName"
+        )
     }
 }

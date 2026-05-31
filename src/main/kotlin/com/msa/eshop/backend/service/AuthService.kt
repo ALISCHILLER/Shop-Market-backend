@@ -1,12 +1,17 @@
 package com.msa.eshop.backend.service
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.TokenResponse
-import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
-import com.msa.eshop.backend.common.dtos.TokenRequest
 import com.msa.eshop.backend.common.UnauthorizedException
+import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
+import com.msa.eshop.backend.common.dtos.LoginDataDto
+import com.msa.eshop.backend.common.dtos.LogoutRequest
+import com.msa.eshop.backend.common.dtos.RefreshTokenRequest
+import com.msa.eshop.backend.common.dtos.RefreshTokenResponseDto
+import com.msa.eshop.backend.common.dtos.TokenRequest
 import com.msa.eshop.backend.domain.CustomerRepository
 import com.msa.eshop.backend.security.JwtTokenService
+import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
+import com.msa.eshop.backend.service.auth.RefreshTokenService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -16,10 +21,17 @@ class AuthService(
     private val customerRepository: CustomerRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtTokenService: JwtTokenService,
-    private val currentUserService: CurrentUserService
+    private val currentUserService: CurrentUserService,
+    private val passwordPolicyValidator: PasswordPolicyValidator,
+    private val refreshTokenService: RefreshTokenService
 ) {
-    @Transactional(readOnly = true)
-    fun login(request: TokenRequest): TokenResponse {
+
+    @Transactional
+    fun login(
+        request: TokenRequest,
+        ipAddress: String?,
+        userAgent: String?
+    ): LoginDataDto {
         val customerCode = request.customerCode?.trim().orEmpty()
         val password = request.password?.trim().orEmpty()
 
@@ -38,7 +50,19 @@ class AuthService(
             throw UnauthorizedException("کد مشتری یا رمز عبور اشتباه است")
         }
 
-        return TokenResponse(jwtTokenService.generateToken(customer))
+        val token = jwtTokenService.generateToken(customer)
+
+        val refreshToken = refreshTokenService.create(
+            customer = customer,
+            ipAddress = ipAddress,
+            userAgent = userAgent
+        )
+
+        return LoginDataDto(
+            token = token,
+            refreshToken = refreshToken,
+            passwordChangeRequired = customer.passwordChangeRequired
+        )
     }
 
     @Transactional
@@ -56,18 +80,63 @@ class AuthService(
             throw BadRequestException("رمز عبور فعلی اشتباه است")
         }
 
-        if (newPassword.length < 6) {
-            throw BadRequestException("رمز عبور جدید باید حداقل ۶ کاراکتر باشد")
-        }
-
         if (oldPassword == newPassword) {
             throw BadRequestException("رمز عبور جدید نباید با رمز عبور قبلی یکسان باشد")
         }
 
+        passwordPolicyValidator.validate(
+            password = newPassword,
+            customerCode = customer.customerCode
+        )
+
         customer.passwordHash = passwordEncoder.encode(newPassword)
-        customer.salt = "bcrypt"
+        customer.salt = PASSWORD_ALGORITHM
+        customer.passwordChangeRequired = false
+
+        refreshTokenService.revokeAllForCustomer(customer)
 
         customerRepository.save(customer)
+
         return true
+    }
+
+    @Transactional
+    fun refreshToken(
+        request: RefreshTokenRequest,
+        ipAddress: String?,
+        userAgent: String?
+    ): RefreshTokenResponseDto {
+        val storedRefreshToken = refreshTokenService.validate(request.refreshToken)
+        val customer = storedRefreshToken.customer
+
+        if (!customer.enabled) {
+            throw UnauthorizedException("حساب کاربری غیرفعال است")
+        }
+
+        refreshTokenService.revoke(request.refreshToken)
+
+        val newAccessToken = jwtTokenService.generateToken(customer)
+
+        val newRefreshToken = refreshTokenService.create(
+            customer = customer,
+            ipAddress = ipAddress,
+            userAgent = userAgent
+        )
+
+        return RefreshTokenResponseDto(
+            token = newAccessToken,
+            refreshToken = newRefreshToken,
+            passwordChangeRequired = customer.passwordChangeRequired
+        )
+    }
+
+    @Transactional
+    fun logout(request: LogoutRequest): Boolean {
+        refreshTokenService.revoke(request.refreshToken)
+        return true
+    }
+
+    private companion object {
+        const val PASSWORD_ALGORITHM = "bcrypt"
     }
 }

@@ -22,7 +22,9 @@ data class BaseResponse<T>(
 @JsonInclude(JsonInclude.Include.ALWAYS)
 data class TokenResponse(
     val token: String?,
-    val data: String? = token,
+    val refreshToken: String? = null,
+    val passwordChangeRequired: Boolean = false,
+    val data: Any? = token,
     val hasError: Boolean = false,
     val message: String? = null
 )

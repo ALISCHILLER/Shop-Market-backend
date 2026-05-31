@@ -1,13 +1,17 @@
 package com.msa.eshop.backend.api
 
-import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
-import com.msa.eshop.backend.common.ChangePasswordResponse
-import com.msa.eshop.backend.common.dtos.TokenRequest
+import com.msa.eshop.backend.common.BaseResponse
 import com.msa.eshop.backend.common.TokenResponse
 import com.msa.eshop.backend.common.UserResponse
+import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
+import com.msa.eshop.backend.common.dtos.LogoutRequest
+import com.msa.eshop.backend.common.dtos.RefreshTokenRequest
+import com.msa.eshop.backend.common.dtos.RefreshTokenResponseDto
+import com.msa.eshop.backend.common.dtos.TokenRequest
 import com.msa.eshop.backend.service.AuthService
 import com.msa.eshop.backend.service.CurrentUserService
 import com.msa.eshop.backend.service.toDto
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -21,19 +25,64 @@ class UserController(
     private val authService: AuthService,
     private val currentUserService: CurrentUserService
 ) {
+
     @PostMapping("/loginUser")
     fun login(
-        @RequestBody request: TokenRequest
-    ): TokenResponse =
-        authService.login(request)
+        @RequestBody request: TokenRequest,
+        httpRequest: HttpServletRequest
+    ): TokenResponse {
+        val loginData = authService.login(
+            request = request,
+            ipAddress = httpRequest.remoteAddr,
+            userAgent = httpRequest.getHeader("User-Agent")
+        )
+
+        return TokenResponse(
+            token = loginData.token,
+            refreshToken = loginData.refreshToken,
+            passwordChangeRequired = loginData.passwordChangeRequired,
+            data = loginData
+        )
+    }
 
     @GetMapping("/CustomerProfile")
     fun profile(): UserResponse =
-        UserResponse(listOf(currentUserService.requireCustomer().toDto()))
+        UserResponse(
+            user = listOf(currentUserService.requireCustomer().toDto())
+        )
 
     @PostMapping("/changepassword")
     fun changePassword(
         @Valid @RequestBody request: ChangePasswordRequest
-    ): ChangePasswordResponse =
-        ChangePasswordResponse(authService.changePassword(request))
+    ): BaseResponse<Boolean> =
+        BaseResponse(
+            data = authService.changePassword(request),
+            hasError = false,
+            message = null
+        )
+
+    @PostMapping("/refresh")
+    fun refresh(
+        @Valid @RequestBody request: RefreshTokenRequest,
+        httpRequest: HttpServletRequest
+    ): BaseResponse<RefreshTokenResponseDto> =
+        BaseResponse(
+            data = authService.refreshToken(
+                request = request,
+                ipAddress = httpRequest.remoteAddr,
+                userAgent = httpRequest.getHeader("User-Agent")
+            ),
+            hasError = false,
+            message = null
+        )
+
+    @PostMapping("/logout")
+    fun logout(
+        @Valid @RequestBody request: LogoutRequest
+    ): BaseResponse<Boolean> =
+        BaseResponse(
+            data = authService.logout(request),
+            hasError = false,
+            message = null
+        )
 }

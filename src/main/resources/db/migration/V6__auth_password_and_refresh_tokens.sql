@@ -1,6 +1,10 @@
 alter table customers
     add column if not exists password_change_required boolean not null default false;
 
+update customers
+set password_change_required = true
+where password_hash like '{plain}%';
+
 create table if not exists refresh_tokens (
                                               id uuid primary key,
                                               customer_id uuid not null references customers(id),
