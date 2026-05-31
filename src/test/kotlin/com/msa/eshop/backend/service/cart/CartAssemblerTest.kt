@@ -4,6 +4,7 @@ import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.Money
 import com.msa.eshop.backend.domain.Customer
 import com.msa.eshop.backend.domain.CustomerAddress
+import com.msa.eshop.backend.domain.PaymentKind
 import com.msa.eshop.backend.domain.PaymentTerm
 import com.msa.eshop.backend.domain.Product
 import com.msa.eshop.backend.service.PriceLine
@@ -17,26 +18,131 @@ class CartAssemblerTest {
 
     @Test
     fun `assemble should reject empty price lines`() {
+        val pricingResult = CartPricingResult(
+            paymentTerm = PaymentTerm(name = "Receipt"),
+            paymentKind = PaymentKind.RECEIPT,
+            priceLines = emptyList(),
+            subtotal = Money.zero(),
+            discountTotal = Money.zero(),
+            taxTotal = Money.zero(),
+            total = Money.zero()
+        )
+
         assertThrows(BadRequestException::class.java) {
             assembler.assemble(
                 cartCode = 100001,
-                customer = Customer(customerCode = "C001", customerName = "Customer"),
-                address = CustomerAddress(customerAddress = "Address"),
-                paymentTerm = PaymentTerm(name = "Receipt"),
-                priceLines = emptyList()
+                customer = createCustomer(),
+                address = createAddress(),
+                pricingResult = pricingResult
             )
         }
     }
 
     @Test
-    fun `assemble should calculate cart totals`() {
-        val product = Product(
-            productName = "Product",
-            productCode = 1001,
-            price = 100_000
+    fun `assemble should reject missing payment term`() {
+        val pricingResult = CartPricingResult(
+            paymentTerm = null,
+            paymentKind = PaymentKind.RECEIPT,
+            priceLines = listOf(createPriceLine()),
+            subtotal = Money(200_000),
+            discountTotal = Money(29_000),
+            taxTotal = Money(15_390),
+            total = Money(186_390)
         )
 
-        val line = PriceLine(
+        assertThrows(BadRequestException::class.java) {
+            assembler.assemble(
+                cartCode = 100001,
+                customer = createCustomer(),
+                address = createAddress(),
+                pricingResult = pricingResult
+            )
+        }
+    }
+
+    @Test
+    fun `assemble should calculate cart totals from pricing result`() {
+        val pricingResult = CartPricingResult(
+            paymentTerm = PaymentTerm(name = "Receipt"),
+            paymentKind = PaymentKind.RECEIPT,
+            priceLines = listOf(createPriceLine()),
+            subtotal = Money(200_000),
+            discountTotal = Money(29_000),
+            taxTotal = Money(15_390),
+            total = Money(186_390)
+        )
+
+        val cart = assembler.assemble(
+            cartCode = 100001,
+            customer = createCustomer(),
+            address = createAddress(),
+            pricingResult = pricingResult
+        )
+
+        assertEquals(100001, cart.cartCode)
+        assertEquals(200_000L, cart.subtotal)
+        assertEquals(29_000L, cart.discountTotal)
+        assertEquals(15_390L, cart.taxTotal)
+        assertEquals(186_390L, cart.total)
+        assertEquals("REGISTERED", cart.statusCode)
+        assertEquals(1, cart.items.size)
+    }
+
+    @Test
+    fun `assemble should create cart item from price line`() {
+        val pricingResult = CartPricingResult(
+            paymentTerm = PaymentTerm(name = "Receipt"),
+            paymentKind = PaymentKind.RECEIPT,
+            priceLines = listOf(createPriceLine()),
+            subtotal = Money(200_000),
+            discountTotal = Money(29_000),
+            taxTotal = Money(15_390),
+            total = Money(186_390)
+        )
+
+        val cart = assembler.assemble(
+            cartCode = 100001,
+            customer = createCustomer(),
+            address = createAddress(),
+            pricingResult = pricingResult
+        )
+
+        val item = cart.items.first()
+
+        assertEquals(1001, item.productCode)
+        assertEquals("Product", item.productName)
+        assertEquals(2, item.quantity)
+        assertEquals(100_000L, item.price)
+        assertEquals(29_000L, item.discount)
+        assertEquals(15_390L, item.tax)
+        assertEquals(186_390L, item.total)
+    }
+
+    private fun createCustomer(): Customer {
+        return Customer(
+            customerCode = "C001",
+            customerName = "Customer"
+        )
+    }
+
+    private fun createAddress(): CustomerAddress {
+        return CustomerAddress(
+            customerAddress = "Address"
+        )
+    }
+
+    private fun createProduct(): Product {
+        return Product(
+            productName = "Product",
+            productCode = 1001,
+            price = 100_000L
+        )
+    }
+
+    private fun createPriceLine(): PriceLine {
+        val product = createProduct()
+
+        return PriceLine(
             product = product,
             quantity = 2,
             gross = Money(200_000),
@@ -50,20 +156,5 @@ class CartAssemblerTest {
             taxWithoutPaymentDiscount = Money(16_200),
             total = Money(186_390)
         )
-
-        val cart = assembler.assemble(
-            cartCode = 100001,
-            customer = Customer(customerCode = "C001", customerName = "Customer"),
-            address = CustomerAddress(customerAddress = "Address"),
-            paymentTerm = PaymentTerm(name = "Receipt"),
-            priceLines = listOf(line)
-        )
-
-        assertEquals(200_000L, cart.subtotal)
-        assertEquals(29_000L, cart.discountTotal)
-        assertEquals(15_390L, cart.taxTotal)
-        assertEquals(186_390L, cart.total)
-        assertEquals("REGISTERED", cart.statusCode)
-        assertEquals(1, cart.items.size)
     }
 }
