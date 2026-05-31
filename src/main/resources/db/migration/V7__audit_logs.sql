@@ -1,7 +1,7 @@
 create table if not exists audit_logs (
-                                          id uuid primary key,
-                                          actor_customer_id uuid,
-                                          actor_customer_code varchar(64),
+    id uuid primary key,
+    actor_customer_id uuid,
+    actor_customer_code varchar(64),
     actor_customer_name varchar(255),
     action varchar(128) not null,
     entity_type varchar(128) not null,

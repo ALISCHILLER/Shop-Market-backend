@@ -2,16 +2,17 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.cleanOrNull
+import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.ProductDto
 import com.msa.eshop.backend.common.dtos.UpsertProductRequest
-import com.msa.eshop.backend.common.cleanOrNull
-import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.repository.CartItemRepository
 import com.msa.eshop.backend.domain.entity.Product
+import com.msa.eshop.backend.domain.repository.CartItemRepository
 import com.msa.eshop.backend.domain.repository.ProductCategoryRepository
 import com.msa.eshop.backend.domain.repository.ProductRepository
+import com.msa.eshop.backend.service.audit.AuditLogService
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,14 +22,46 @@ import java.util.UUID
 class AdminProductService(
     private val productRepository: ProductRepository,
     private val categoryRepository: ProductCategoryRepository,
-    private val cartItemRepository: CartItemRepository
+    private val cartItemRepository: CartItemRepository,
+    private val auditLogService: AuditLogService
 ) {
+
     @Transactional(readOnly = true)
     fun findAll(): List<ProductDto> =
         productRepository.findAllByOrderByProductNameAsc()
             .map { it.toDto() }
 
+    @Transactional(readOnly = true)
+    fun search(
+        page: Int,
+        size: Int,
+        search: String?,
+        productGroupCode: Int?,
+        isDiscounts: Boolean?,
+        isTax: Boolean?,
+        sortBy: String = DEFAULT_SORT_BY,
+        direction: String = DEFAULT_SORT_DIRECTION
+    ): PageResponseDto<ProductDto> {
+        if (productGroupCode != null && productGroupCode <= 0) {
+            throw BadRequestException("کد گروه کالا معتبر نیست")
+        }
 
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            direction = direction,
+            allowedSorts = ALLOWED_SORTS
+        )
+
+        return productRepository.searchAdminProducts(
+            search = search.cleanOrNull(),
+            productGroupCode = productGroupCode,
+            isDiscounts = isDiscounts,
+            isTax = isTax,
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
+    }
 
     @Transactional
     fun create(request: UpsertProductRequest): ProductDto {
@@ -39,10 +72,22 @@ class AdminProductService(
             throw BadRequestException("کد کالا قبلاً ثبت شده است")
         }
 
-        val product = Product()
-        product.applyRequest(request)
+        val product = Product().apply {
+            applyRequest(request)
+        }
 
-        return productRepository.save(product).toDto()
+        val savedProduct = productRepository.save(product)
+
+        auditLogService.record(
+            action = "PRODUCT_CREATED",
+            entityType = ENTITY_TYPE_PRODUCT,
+            entityId = savedProduct.id?.toString(),
+            oldValue = null,
+            newValue = productSnapshot(savedProduct),
+            description = "Product created by admin"
+        )
+
+        return savedProduct.toDto()
     }
 
     @Transactional
@@ -57,9 +102,22 @@ class AdminProductService(
         val product = productRepository.findById(id)
             .orElseThrow { NotFoundException("کالا پیدا نشد") }
 
+        val oldSnapshot = productSnapshot(product)
+
         product.applyRequest(request)
 
-        return productRepository.save(product).toDto()
+        val savedProduct = productRepository.save(product)
+
+        auditLogService.record(
+            action = "PRODUCT_UPDATED",
+            entityType = ENTITY_TYPE_PRODUCT,
+            entityId = savedProduct.id?.toString(),
+            oldValue = oldSnapshot,
+            newValue = productSnapshot(savedProduct),
+            description = "Product updated by admin"
+        )
+
+        return savedProduct.toDto()
     }
 
     @Transactional
@@ -70,6 +128,17 @@ class AdminProductService(
         if (cartItemRepository.countByProductId(id) > 0) {
             throw BadRequestException("این کالا در سفارش استفاده شده و قابل حذف نیست")
         }
+
+        val oldSnapshot = productSnapshot(product)
+
+        auditLogService.record(
+            action = "PRODUCT_DELETED",
+            entityType = ENTITY_TYPE_PRODUCT,
+            entityId = product.id?.toString(),
+            oldValue = oldSnapshot,
+            newValue = null,
+            description = "Product deleted by admin"
+        )
 
         productRepository.delete(product)
     }
@@ -120,35 +189,35 @@ class AdminProductService(
         }
     }
 
-    @Transactional(readOnly = true)
-    fun search(
-        page: Int,
-        size: Int,
-        search: String?,
-        productGroupCode: Int?,
-        isDiscounts: Boolean?,
-        isTax: Boolean?,
-        sortBy: String = "productName",
-        direction: String = "ASC"
-    ): PageResponseDto<ProductDto> {
-        if (productGroupCode != null && productGroupCode <= 0) {
-            throw BadRequestException("کد گروه کالا معتبر نیست")
-        }
-
-        val pageable = createPageable(
-            page = page,
-            size = size,
-            sortBy = sortBy,
-            direction = direction,
-            allowedSorts = setOf("productName", "productCode", "price")
+    private fun productSnapshot(product: Product): Map<String, Any?> =
+        auditLogService.snapshotOf(
+            "id" to product.id,
+            "productCode" to product.productCode,
+            "productName" to product.productName,
+            "fullNameKala1" to product.fullNameKala1,
+            "unit1" to product.unit1,
+            "unitid1" to product.unitid1,
+            "convertFactor1" to product.convertFactor1,
+            "fullNameKala2" to product.fullNameKala2,
+            "unit2" to product.unit2,
+            "unitid2" to product.unitid2,
+            "convertFactor2" to product.convertFactor2,
+            "productGroupCode" to product.productGroupCode,
+            "price" to product.price,
+            "isTax" to product.isTax,
+            "isDiscounts" to product.isDiscounts,
+            "productImage" to product.productImage
         )
 
-        return productRepository.searchAdminProducts(
-            search = search.cleanOrNull(),
-            productGroupCode = productGroupCode,
-            isDiscounts = isDiscounts,
-            isTax = isTax,
-            pageable = pageable
-        ).toPageResponse { it.toDto() }
+    private companion object {
+        const val ENTITY_TYPE_PRODUCT = "Product"
+        const val DEFAULT_SORT_BY = "productName"
+        const val DEFAULT_SORT_DIRECTION = "ASC"
+
+        val ALLOWED_SORTS = setOf(
+            "productName",
+            "productCode",
+            "price"
+        )
     }
 }

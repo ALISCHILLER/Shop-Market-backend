@@ -107,4 +107,18 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(BaseResponse(data = null, hasError = true, message = "خطای سرور رخ داد"))
     }
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(exception: IllegalArgumentException): ResponseEntity<BaseResponse<Nothing>> {
+        logger.warn("Illegal argument", exception)
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(
+                BaseResponse(
+                    data = null,
+                    hasError = true,
+                    message = exception.message ?: "درخواست معتبر نیست"
+                )
+            )
+    }
 }

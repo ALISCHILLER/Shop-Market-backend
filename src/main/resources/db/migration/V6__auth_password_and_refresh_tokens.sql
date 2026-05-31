@@ -21,8 +21,5 @@ create table if not exists refresh_tokens (
 create index if not exists idx_refresh_tokens_customer
     on refresh_tokens(customer_id);
 
-create index if not exists idx_refresh_tokens_token_hash
-    on refresh_tokens(token_hash);
-
 create index if not exists idx_refresh_tokens_expires_at
     on refresh_tokens(expires_at);

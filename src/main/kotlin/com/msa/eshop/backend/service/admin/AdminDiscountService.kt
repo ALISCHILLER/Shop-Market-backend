@@ -1,13 +1,14 @@
 package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
-import com.msa.eshop.backend.common.dtos.DiscountResultDto
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.dtos.DiscountResultDto
 import com.msa.eshop.backend.common.dtos.UpsertDiscountRequest
 import com.msa.eshop.backend.common.requireMin
 import com.msa.eshop.backend.common.requirePercent
 import com.msa.eshop.backend.domain.entity.Discount
 import com.msa.eshop.backend.domain.repository.DiscountRepository
+import com.msa.eshop.backend.service.audit.AuditLogService
 import com.msa.eshop.backend.service.catalog.ProductResolver
 import com.msa.eshop.backend.service.toDto
 import org.springframework.stereotype.Service
@@ -17,8 +18,10 @@ import java.util.UUID
 @Service
 class AdminDiscountService(
     private val discountRepository: DiscountRepository,
-    private val productResolver: ProductResolver
+    private val productResolver: ProductResolver,
+    private val auditLogService: AuditLogService
 ) {
+
     @Transactional(readOnly = true)
     fun findAll(): List<DiscountResultDto> =
         discountRepository.findAllByOrderByFromNumberAsc()
@@ -45,7 +48,18 @@ class AdminDiscountService(
             endNumber = request.endNumber
         )
 
-        return discountRepository.save(discount).toDto()
+        val savedDiscount = discountRepository.save(discount)
+
+        auditLogService.record(
+            action = "DISCOUNT_CREATED",
+            entityType = ENTITY_TYPE_DISCOUNT,
+            entityId = savedDiscount.id?.toString(),
+            oldValue = null,
+            newValue = discountSnapshot(savedDiscount),
+            description = "Discount created by admin"
+        )
+
+        return savedDiscount.toDto()
     }
 
     @Transactional
@@ -54,6 +68,8 @@ class AdminDiscountService(
 
         val discount = discountRepository.findById(id)
             .orElseThrow { NotFoundException("تخفیف پیدا نشد") }
+
+        val oldSnapshot = discountSnapshot(discount)
 
         val product = productResolver.requireByIdOrCode(request.productId)
         val productId = requireNotNull(product.id)
@@ -70,13 +86,35 @@ class AdminDiscountService(
         discount.fromNumber = request.fromNumber
         discount.endNumber = request.endNumber
 
-        return discountRepository.save(discount).toDto()
+        val savedDiscount = discountRepository.save(discount)
+
+        auditLogService.record(
+            action = "DISCOUNT_UPDATED",
+            entityType = ENTITY_TYPE_DISCOUNT,
+            entityId = savedDiscount.id?.toString(),
+            oldValue = oldSnapshot,
+            newValue = discountSnapshot(savedDiscount),
+            description = "Discount updated by admin"
+        )
+
+        return savedDiscount.toDto()
     }
 
     @Transactional
     fun delete(id: UUID) {
         val discount = discountRepository.findById(id)
             .orElseThrow { NotFoundException("تخفیف پیدا نشد") }
+
+        val oldSnapshot = discountSnapshot(discount)
+
+        auditLogService.record(
+            action = "DISCOUNT_DELETED",
+            entityType = ENTITY_TYPE_DISCOUNT,
+            entityId = discount.id?.toString(),
+            oldValue = oldSnapshot,
+            newValue = null,
+            description = "Discount deleted by admin"
+        )
 
         discountRepository.delete(discount)
     }
@@ -106,5 +144,20 @@ class AdminDiscountService(
         if (hasOverlap) {
             throw BadRequestException("بازه تخفیف با تخفیف دیگری برای همین کالا تداخل دارد")
         }
+    }
+
+    private fun discountSnapshot(discount: Discount): Map<String, Any?> =
+        auditLogService.snapshotOf(
+            "id" to discount.id,
+            "productId" to discount.product?.id,
+            "productCode" to discount.product?.productCode,
+            "productName" to discount.product?.productName,
+            "fromNumber" to discount.fromNumber,
+            "endNumber" to discount.endNumber,
+            "discountPercent" to discount.discountPercent
+        )
+
+    private companion object {
+        const val ENTITY_TYPE_DISCOUNT = "Discount"
     }
 }
