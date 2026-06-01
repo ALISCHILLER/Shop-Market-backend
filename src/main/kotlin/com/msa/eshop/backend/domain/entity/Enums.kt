@@ -24,10 +24,36 @@ enum class CustomerRole {
     }
 }
 
-enum class PaymentKind {
-    IMMEDIATE,
-    RECEIPT,
-    CHEQUE
+enum class PaymentKind(
+    val title: String
+) {
+    IMMEDIATE("نقدی"),
+    RECEIPT("رسید"),
+    CHEQUE("چک");
+
+    companion object {
+        fun normalize(value: String?): PaymentKind {
+            val raw = value
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: throw BadRequestException("نوع روش پرداخت الزامی است")
+
+            val normalized = raw
+                .uppercase()
+                .replace("-", "_")
+                .replace(" ", "_")
+                .replace("‌", "")
+
+            return entries.firstOrNull { kind ->
+                kind.name == normalized || kind.title == raw
+            } ?: when (raw.lowercase()) {
+                "cash", "نقد", "نقدی", "immediate" -> IMMEDIATE
+                "receipt", "رسید", "رسیدی", "اعتباری" -> RECEIPT
+                "cheque", "check", "چک", "چکی" -> CHEQUE
+                else -> throw BadRequestException("نوع روش پرداخت معتبر نیست")
+            }
+        }
+    }
 }
 
 enum class CartStatus(

@@ -157,3 +157,22 @@ data class CartSimulateLineResponse(
     val tax: Long,
     val total: Long
 )
+
+data class CartCheckoutRequest(
+    @field:NotNull(message = "شناسه آدرس الزامی است")
+    val customerAddressId: UUID,
+
+    @field:NotNull(message = "شناسه روش پرداخت الزامی است")
+    val paymentTermId: UUID,
+
+    @field:Valid
+    @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
+    @field:Size(max = 100, message = "تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از ۱۰۰ باشد")
+    val items: List<CartSimulateLineRequest>
+)
+
+data class CartHistoryQueryDto(
+    val customerId: UUID? = null,
+    val fromDate: String? = null,
+    val toDate: String? = null
+)

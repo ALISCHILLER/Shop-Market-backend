@@ -10,42 +10,35 @@ class PaymentKindResolverTest {
     private val resolver = PaymentKindResolver()
 
     @Test
-    fun `deadLine zero should resolve to immediate`() {
+    fun `resolve should use persisted payment kind immediate`() {
         val term = PaymentTerm(
-            name = "پرداخت فوری",
-            deadLine = 0
+            name = "هر نامی",
+            deadLine = 30,
+            paymentKind = PaymentKind.IMMEDIATE
         )
 
         assertEquals(PaymentKind.IMMEDIATE, resolver.resolve(term))
     }
 
     @Test
-    fun `cash name should resolve to immediate`() {
+    fun `resolve should use persisted payment kind receipt`() {
         val term = PaymentTerm(
-            name = "cash payment",
-            deadLine = 10
-        )
-
-        assertEquals(PaymentKind.IMMEDIATE, resolver.resolve(term))
-    }
-
-    @Test
-    fun `cheque name should resolve to cheque`() {
-        val term = PaymentTerm(
-            name = "پرداخت چکی",
-            deadLine = 30
-        )
-
-        assertEquals(PaymentKind.CHEQUE, resolver.resolve(term))
-    }
-
-    @Test
-    fun `unknown deferred payment should resolve to receipt`() {
-        val term = PaymentTerm(
-            name = "پرداخت اعتباری",
-            deadLine = 30
+            name = "نقدی ولی نوع رسید است",
+            deadLine = 30,
+            paymentKind = PaymentKind.RECEIPT
         )
 
         assertEquals(PaymentKind.RECEIPT, resolver.resolve(term))
+    }
+
+    @Test
+    fun `resolve should use persisted payment kind cheque`() {
+        val term = PaymentTerm(
+            name = "رسید ولی نوع چک است",
+            deadLine = 60,
+            paymentKind = PaymentKind.CHEQUE
+        )
+
+        assertEquals(PaymentKind.CHEQUE, resolver.resolve(term))
     }
 }

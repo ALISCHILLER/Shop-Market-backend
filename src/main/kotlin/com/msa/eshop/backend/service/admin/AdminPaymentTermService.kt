@@ -6,6 +6,7 @@ import com.msa.eshop.backend.common.cleanRequired
 import com.msa.eshop.backend.common.dtos.PaymentTermDto
 import com.msa.eshop.backend.common.dtos.UpsertPaymentTermRequest
 import com.msa.eshop.backend.common.requirePercent
+import com.msa.eshop.backend.domain.entity.PaymentKind
 import com.msa.eshop.backend.domain.entity.PaymentTerm
 import com.msa.eshop.backend.domain.repository.CartRepository
 import com.msa.eshop.backend.domain.repository.PaymentTermRepository
@@ -31,8 +32,11 @@ class AdminPaymentTermService(
     fun create(request: UpsertPaymentTermRequest): PaymentTermDto {
         validateRequest(request)
 
+        val paymentKind = PaymentKind.normalize(request.paymentKind)
+
         val term = PaymentTerm(
             name = request.name.cleanRequired("نام روش پرداخت الزامی است"),
+            paymentKind = paymentKind,
             deadLine = request.deadLine,
             immediateDiscountPercent = request.immediateDiscountPercent,
             receiptDiscountPercent = request.receiptDiscountPercent,
@@ -62,12 +66,19 @@ class AdminPaymentTermService(
             .orElseThrow { NotFoundException("روش پرداخت پیدا نشد") }
 
         val oldSnapshot = paymentTermSnapshot(term)
+        val paymentKind = PaymentKind.normalize(request.paymentKind)
 
         term.name = request.name.cleanRequired("نام روش پرداخت الزامی است")
+        term.paymentKind = paymentKind
         term.deadLine = request.deadLine
         term.immediateDiscountPercent = request.immediateDiscountPercent
         term.receiptDiscountPercent = request.receiptDiscountPercent
         term.chequeDiscountPercent = request.chequeDiscountPercent
+
+        if (term.active && !request.active) {
+            ensureAtLeastOneOtherActiveTerm(term.id)
+        }
+
         term.active = request.active
 
         val savedTerm = paymentTermRepository.save(term)
@@ -93,6 +104,10 @@ class AdminPaymentTermService(
             throw BadRequestException("این روش پرداخت در سفارش استفاده شده و قابل حذف نیست")
         }
 
+        if (term.active) {
+            ensureAtLeastOneOtherActiveTerm(term.id)
+        }
+
         val oldSnapshot = paymentTermSnapshot(term)
 
         auditLogService.record(
@@ -109,6 +124,7 @@ class AdminPaymentTermService(
 
     private fun validateRequest(request: UpsertPaymentTermRequest) {
         request.name.cleanRequired("نام روش پرداخت الزامی است")
+        PaymentKind.normalize(request.paymentKind)
 
         if (request.deadLine < 0) {
             throw BadRequestException("مهلت پرداخت معتبر نیست")
@@ -117,12 +133,33 @@ class AdminPaymentTermService(
         request.immediateDiscountPercent.requirePercent()
         request.receiptDiscountPercent.requirePercent()
         request.chequeDiscountPercent.requirePercent()
+
+        val kind = PaymentKind.normalize(request.paymentKind)
+
+        if (kind == PaymentKind.IMMEDIATE && request.deadLine != 0) {
+            throw BadRequestException("برای پرداخت نقدی، مهلت پرداخت باید صفر باشد")
+        }
+
+        if (kind != PaymentKind.IMMEDIATE && request.deadLine == 0) {
+            throw BadRequestException("برای روش پرداخت غیرنقدی، مهلت پرداخت باید بزرگ‌تر از صفر باشد")
+        }
+    }
+
+    private fun ensureAtLeastOneOtherActiveTerm(currentId: UUID?) {
+        val activeTerms = paymentTermRepository.findByActiveTrueOrderByDeadLineAsc()
+        val hasOtherActive = activeTerms.any { it.id != currentId }
+
+        if (!hasOtherActive) {
+            throw BadRequestException("حداقل یک روش پرداخت فعال باید باقی بماند")
+        }
     }
 
     private fun paymentTermSnapshot(paymentTerm: PaymentTerm): Map<String, Any?> =
         auditLogService.snapshotOf(
             "id" to paymentTerm.id,
             "name" to paymentTerm.name,
+            "paymentKind" to paymentTerm.paymentKind.name,
+            "paymentKindTitle" to paymentTerm.paymentKind.title,
             "deadLine" to paymentTerm.deadLine,
             "receiptDiscountPercent" to paymentTerm.receiptDiscountPercent,
             "chequeDiscountPercent" to paymentTerm.chequeDiscountPercent,

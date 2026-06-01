@@ -10,10 +10,9 @@ data class UserDto(
     val phone: String?,
     val center: String?,
     val nationalCode: String?,
-    val password: String? = null,
-    val salt: String? = null,
     val role: String = "CUSTOMER",
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    val passwordChangeRequired: Boolean = false
 )
 
 data class UpsertCustomerRequest(

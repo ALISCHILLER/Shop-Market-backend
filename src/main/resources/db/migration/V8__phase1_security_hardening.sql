@@ -97,5 +97,4 @@ end $$;
 create index if not exists idx_refresh_tokens_customer_active
     on refresh_tokens(customer_id, revoked_at, expires_at);
 
-create index if not exists idx_refresh_tokens_token_hash
-    on refresh_tokens(token_hash);
+

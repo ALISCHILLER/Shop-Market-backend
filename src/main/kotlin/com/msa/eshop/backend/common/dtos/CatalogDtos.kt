@@ -48,6 +48,8 @@ data class PaymentTermDto(
     val deadLine: Int,
     val id: String,
     val name: String,
+    val paymentKind: String,
+    val paymentKindTitle: String,
     val immediateDiscountPercent: Int = 0,
     val receiptDiscountPercent: Int = 0,
     val chequeDiscountPercent: Int = 0,
@@ -115,6 +117,9 @@ data class UpsertBannerRequest(
 data class UpsertPaymentTermRequest(
     @field:NotBlank(message = "نام روش پرداخت الزامی است")
     val name: String,
+
+    @field:NotBlank(message = "نوع روش پرداخت الزامی است")
+    val paymentKind: String,
 
     @field:Min(value = 0, message = "مهلت پرداخت معتبر نیست")
     val deadLine: Int,

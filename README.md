@@ -94,6 +94,15 @@ bash scripts/smoke-test.sh
 ```kotlin
 private const val BASE_URL = "http://10.0.2.2:8282/"
 ```
+## Local Docker Run
+
+For local development, use the default `.env.example` profile:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
 
 ## مستندات
 

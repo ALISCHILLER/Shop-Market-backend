@@ -2,6 +2,7 @@ package com.msa.eshop.backend.api.admin
 
 import com.msa.eshop.backend.common.BaseResponse
 import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.UpsertAddressRequest
 import com.msa.eshop.backend.service.admin.AdminAddressService
 import jakarta.validation.Valid
@@ -26,6 +27,26 @@ class AdminAddressController(
         @RequestParam(required = false) customerId: UUID?
     ): BaseResponse<List<OrderAddressDto>> =
         BaseResponse(addressService.findAll(customerId))
+
+    @GetMapping("/page")
+    fun addressesPage(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) customerId: UUID?,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(defaultValue = "createdAt") sortBy: String,
+        @RequestParam(defaultValue = "DESC") direction: String
+    ): BaseResponse<PageResponseDto<OrderAddressDto>> =
+        BaseResponse(
+            addressService.search(
+                page = page,
+                size = size,
+                customerId = customerId,
+                search = search,
+                sortBy = sortBy,
+                direction = direction
+            )
+        )
 
     @PostMapping
     fun create(

@@ -38,18 +38,21 @@ class StartupValidation(
 
         if (
             secret.isBlank() ||
-            secret.startsWith("change-me", ignoreCase = true) ||
-            secret.length < MIN_STRONG_JWT_SECRET_LENGTH
+            secret.length < MIN_STRONG_JWT_SECRET_LENGTH ||
+            isPlaceholderSecret(secret)
         ) {
-            error("ESHOP_JWT_SECRET must be configured with a strong secret of at least $MIN_STRONG_JWT_SECRET_LENGTH characters outside dev/test profiles")
+            error(
+                "ESHOP_JWT_SECRET must be configured with a real strong random secret " +
+                        "of at least $MIN_STRONG_JWT_SECRET_LENGTH characters outside dev/test/local profiles"
+            )
         }
 
         if (jwtProperties.expirationMinutes > MAX_STRICT_ACCESS_TOKEN_MINUTES) {
-            error("ESHOP_JWT_EXPIRATION_MINUTES must be <= $MAX_STRICT_ACCESS_TOKEN_MINUTES outside dev/test profiles")
+            error("ESHOP_JWT_EXPIRATION_MINUTES must be <= $MAX_STRICT_ACCESS_TOKEN_MINUTES outside dev/test/local profiles")
         }
 
         if (refreshTokenExpirationDays > MAX_STRICT_REFRESH_TOKEN_DAYS) {
-            error("ESHOP_REFRESH_TOKEN_EXPIRATION_DAYS must be <= $MAX_STRICT_REFRESH_TOKEN_DAYS outside dev/test profiles")
+            error("ESHOP_REFRESH_TOKEN_EXPIRATION_DAYS must be <= $MAX_STRICT_REFRESH_TOKEN_DAYS outside dev/test/local profiles")
         }
 
         val origins = allowedOrigins
@@ -58,7 +61,7 @@ class StartupValidation(
             .filter { it.isNotBlank() }
 
         if (origins.isEmpty() || origins.any { it == "*" }) {
-            error("CORS_ALLOWED_ORIGINS must contain explicit trusted origins outside dev/test profiles")
+            error("CORS_ALLOWED_ORIGINS must contain explicit trusted origins outside dev/test/local profiles")
         }
 
         if (trustForwardedHeaders && !hasTrustedProxyProfile()) {
@@ -68,14 +71,26 @@ class StartupValidation(
 
     private fun isStrictRuntimeProfile(): Boolean {
         val activeProfiles = environment.activeProfiles.map { it.lowercase() }.toSet()
-        if (activeProfiles.isEmpty()) return false
+
+        if (activeProfiles.isEmpty()) {
+            return false
+        }
 
         return activeProfiles.none { it in RELAXED_PROFILES }
     }
 
     private fun hasTrustedProxyProfile(): Boolean {
         val activeProfiles = environment.activeProfiles.map { it.lowercase() }.toSet()
+
         return activeProfiles.any { it in TRUSTED_PROXY_PROFILES }
+    }
+
+    private fun isPlaceholderSecret(secret: String): Boolean {
+        val normalized = secret.lowercase()
+
+        return PLACEHOLDER_SECRET_PATTERNS.any { pattern ->
+            normalized.contains(pattern)
+        }
     }
 
     private companion object {
@@ -85,5 +100,18 @@ class StartupValidation(
 
         val RELAXED_PROFILES = setOf("dev", "test", "local")
         val TRUSTED_PROXY_PROFILES = setOf("prod", "docker", "staging")
+
+        val PLACEHOLDER_SECRET_PATTERNS = setOf(
+            "change-me",
+            "changeme",
+            "please-change",
+            "replace-me",
+            "replace-this",
+            "replace-with",
+            "your-secret",
+            "sample-secret",
+            "example-secret",
+            "default-secret"
+        )
     }
 }

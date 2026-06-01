@@ -27,10 +27,9 @@ fun Customer.toDto(): UserDto = UserDto(
     phone = phone,
     center = center,
     nationalCode = nationalCode,
-    password = null,
-    salt = null,
     role = role.uppercase(),
-    enabled = enabled
+    enabled = enabled,
+    passwordChangeRequired = passwordChangeRequired
 )
 
 fun Product.toDto(): ProductDto = ProductDto(
@@ -89,6 +88,8 @@ fun PaymentTerm.toDto(): PaymentTermDto = PaymentTermDto(
     id = requireNotNull(id).toString(),
     name = name,
     deadLine = deadLine,
+    paymentKind = paymentKind.name,
+    paymentKindTitle = paymentKind.title,
     immediateDiscountPercent = immediateDiscountPercent,
     receiptDiscountPercent = receiptDiscountPercent,
     chequeDiscountPercent = chequeDiscountPercent,
