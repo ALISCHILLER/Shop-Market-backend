@@ -8,6 +8,7 @@ import com.msa.eshop.backend.common.dtos.LogoutRequest
 import com.msa.eshop.backend.common.dtos.RefreshTokenRequest
 import com.msa.eshop.backend.common.dtos.RefreshTokenResponseDto
 import com.msa.eshop.backend.common.dtos.TokenRequest
+import com.msa.eshop.backend.security.ClientIpResolver
 import com.msa.eshop.backend.service.AuthService
 import com.msa.eshop.backend.service.CurrentUserService
 import com.msa.eshop.backend.service.toDto
@@ -23,7 +24,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/User")
 class UserController(
     private val authService: AuthService,
-    private val currentUserService: CurrentUserService
+    private val currentUserService: CurrentUserService,
+    private val clientIpResolver: ClientIpResolver
 ) {
 
     @PostMapping("/loginUser")
@@ -33,7 +35,7 @@ class UserController(
     ): TokenResponse {
         val loginData = authService.login(
             request = request,
-            ipAddress = httpRequest.remoteAddr,
+            ipAddress = clientIpResolver.resolve(httpRequest),
             userAgent = httpRequest.getHeader("User-Agent")
         )
 
@@ -69,7 +71,7 @@ class UserController(
         BaseResponse(
             data = authService.refreshToken(
                 request = request,
-                ipAddress = httpRequest.remoteAddr,
+                ipAddress = clientIpResolver.resolve(httpRequest),
                 userAgent = httpRequest.getHeader("User-Agent")
             ),
             hasError = false,

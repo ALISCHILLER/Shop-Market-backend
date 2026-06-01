@@ -1,17 +1,16 @@
 package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
+import com.msa.eshop.backend.common.dtos.CartSimulateLineRequest
 import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import org.springframework.stereotype.Component
-import com.msa.eshop.backend.common.dtos.CartSimulateLineRequest
+
 @Component
 class CartLineNormalizer {
 
     fun normalizeSimulateLines(requests: List<SimulateModelRequest>): List<NormalizedCartLine> {
-        if (requests.isEmpty()) {
-            throw BadRequestException("سبد خرید خالی است")
-        }
+        validateLineCount(requests.size)
 
         requests.forEach {
             validateLine(it.productCode, it.quantity)
@@ -20,7 +19,7 @@ class CartLineNormalizer {
         return requests
             .groupBy { it.productCode }
             .map { (productCode, rows) ->
-                val quantity = rows.sumOf { it.quantity }
+                val quantity = safeQuantitySum(rows.map { it.quantity })
                 validateLine(productCode, quantity)
 
                 NormalizedCartLine(
@@ -32,10 +31,7 @@ class CartLineNormalizer {
     }
 
     fun normalizeCheckoutLines(requests: List<InsertCartModelRequest>): List<NormalizedCartLine> {
-        if (requests.isEmpty()) {
-            throw BadRequestException("سبد خرید خالی است")
-        }
-
+        validateLineCount(requests.size)
         validateSameCheckoutHeader(requests)
 
         requests.forEach {
@@ -45,7 +41,7 @@ class CartLineNormalizer {
         return requests
             .groupBy { it.productCode }
             .map { (productCode, rows) ->
-                val quantity = rows.sumOf { it.quantity }
+                val quantity = safeQuantitySum(rows.map { it.quantity })
                 validateLine(productCode, quantity)
 
                 NormalizedCartLine(
@@ -91,6 +87,27 @@ class CartLineNormalizer {
         )
     }
 
+    fun normalizeModernLines(lines: List<CartSimulateLineRequest>): List<NormalizedCartLine> {
+        validateLineCount(lines.size)
+
+        lines.forEach {
+            validateLine(it.productCode, it.quantity)
+        }
+
+        return lines
+            .groupBy { it.productCode }
+            .map { (productCode, rows) ->
+                val quantity = safeQuantitySum(rows.map { it.quantity })
+                validateLine(productCode, quantity)
+
+                NormalizedCartLine(
+                    productCode = productCode,
+                    quantity = quantity
+                )
+            }
+            .sortedBy { it.productCode }
+    }
+
     private fun validateSameCheckoutHeader(requests: List<InsertCartModelRequest>) {
         val header = extractCheckoutHeader(requests)
 
@@ -105,6 +122,16 @@ class CartLineNormalizer {
         }
     }
 
+    private fun validateLineCount(size: Int) {
+        if (size <= 0) {
+            throw BadRequestException("سبد خرید خالی است")
+        }
+
+        if (size > MAX_CART_LINES) {
+            throw BadRequestException("تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از $MAX_CART_LINES باشد")
+        }
+    }
+
     private fun validateLine(productCode: Int, quantity: Int) {
         if (productCode <= 0) {
             throw BadRequestException("کد کالا معتبر نیست")
@@ -113,28 +140,27 @@ class CartLineNormalizer {
         if (quantity <= 0) {
             throw BadRequestException("تعداد کالا باید بزرگ‌تر از صفر باشد")
         }
+
+        if (quantity > MAX_QUANTITY_PER_PRODUCT) {
+            throw BadRequestException("تعداد هر کالا نمی‌تواند بیشتر از $MAX_QUANTITY_PER_PRODUCT باشد")
+        }
     }
-    fun normalizeModernLines(lines: List<CartSimulateLineRequest>): List<NormalizedCartLine> {
-        if (lines.isEmpty()) {
-            throw BadRequestException("سبد خرید خالی است")
+
+    private fun safeQuantitySum(quantities: List<Int>): Int {
+        val sum = quantities.fold(0L) { acc, value ->
+            Math.addExact(acc, value.toLong())
         }
 
-        lines.forEach {
-            validateLine(it.productCode, it.quantity)
+        if (sum > Int.MAX_VALUE) {
+            throw BadRequestException("تعداد کالا بیش از حد مجاز است")
         }
 
-        return lines
-            .groupBy { it.productCode }
-            .map { (productCode, rows) ->
-                val quantity = rows.sumOf { it.quantity }
-                validateLine(productCode, quantity)
+        return sum.toInt()
+    }
 
-                NormalizedCartLine(
-                    productCode = productCode,
-                    quantity = quantity
-                )
-            }
-            .sortedBy { it.productCode }
+    private companion object {
+        const val MAX_CART_LINES = 100
+        const val MAX_QUANTITY_PER_PRODUCT = 1_000
     }
 }
 

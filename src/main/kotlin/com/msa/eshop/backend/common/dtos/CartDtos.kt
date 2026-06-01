@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
 import java.util.UUID
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Size
 data class SimulateModelRequest(
     val paymentTermId: String? = null,
 
@@ -13,11 +15,14 @@ data class SimulateModelRequest(
     val productCode: Int,
 
     @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
+    @field:Max(value = 1_000, message = "تعداد هر کالا نمی‌تواند بیشتر از ۱۰۰۰ باشد")
     val quantity: Int
 )
+
 data class CartSimulateRequest(
     @field:Valid
     @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
+    @field:Size(max = 100, message = "تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از ۱۰۰ باشد")
     val items: List<CartSimulateLineRequest>,
 
     @field:NotNull(message = "روش پرداخت الزامی است")
@@ -29,8 +34,10 @@ data class CartSimulateLineRequest(
     val productCode: Int,
 
     @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
+    @field:Max(value = 1_000, message = "تعداد هر کالا نمی‌تواند بیشتر از ۱۰۰۰ باشد")
     val quantity: Int
 )
+
 data class InsertCartModelRequest(
     @field:NotBlank(message = "شناسه آدرس الزامی است")
     val customerAddressId: String,
@@ -42,6 +49,7 @@ data class InsertCartModelRequest(
     val productCode: Int,
 
     @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
+    @field:Max(value = 1_000, message = "تعداد هر کالا نمی‌تواند بیشتر از ۱۰۰۰ باشد")
     val quantity: Int
 )
 

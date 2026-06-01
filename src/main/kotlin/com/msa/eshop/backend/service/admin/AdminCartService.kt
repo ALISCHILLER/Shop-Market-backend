@@ -1,6 +1,5 @@
 package com.msa.eshop.backend.service.admin
 
-
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.cleanOrNull
@@ -11,10 +10,12 @@ import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
 import com.msa.eshop.backend.common.dtos.UpdateCartStatusRequest
 import com.msa.eshop.backend.common.parseClientDateOrNull
 import com.msa.eshop.backend.common.toPageResponse
+import com.msa.eshop.backend.domain.entity.Cart
+import com.msa.eshop.backend.domain.entity.CartStatus
 import com.msa.eshop.backend.domain.repository.CartItemRepository
 import com.msa.eshop.backend.domain.repository.CartRepository
-import com.msa.eshop.backend.domain.entity.CartStatus
 import com.msa.eshop.backend.service.admin.mapper.AdminCartMapper
+import com.msa.eshop.backend.service.audit.AuditLogService
 import com.msa.eshop.backend.service.cart.CartStatusPolicy
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,7 +25,8 @@ class AdminCartService(
     private val cartRepository: CartRepository,
     private val cartItemRepository: CartItemRepository,
     private val cartStatusPolicy: CartStatusPolicy,
-    private val adminCartMapper: AdminCartMapper
+    private val adminCartMapper: AdminCartMapper,
+    private val auditLogService: AuditLogService
 ) {
     @Transactional(readOnly = true)
     fun findAll(
@@ -120,6 +122,8 @@ class AdminCartService(
         val cart = cartRepository.findByCartCode(cartCode)
             ?: throw NotFoundException("سفارش پیدا نشد")
 
+        val oldSnapshot = cartStatusSnapshot(cart)
+
         val currentStatus = CartStatus.normalize(
             cart.statusCode.ifBlank { cart.statusName }
         )
@@ -138,9 +142,35 @@ class AdminCartService(
 
         val saved = cartRepository.save(cart)
 
+        auditLogService.record(
+            action = "CART_STATUS_UPDATED",
+            entityType = ENTITY_TYPE_CART,
+            entityId = saved.id?.toString(),
+            oldValue = oldSnapshot,
+            newValue = cartStatusSnapshot(saved),
+            description = "Cart status updated by admin"
+        )
+
         return adminCartMapper.toSummaryDto(
             cart = saved,
             itemCount = saved.items.size
         )
+    }
+
+    private fun cartStatusSnapshot(cart: Cart): Map<String, Any?> =
+        auditLogService.snapshotOf(
+            "id" to cart.id,
+            "cartCode" to cart.cartCode,
+            "customerId" to cart.customer?.id,
+            "customerCode" to cart.customer?.customerCode,
+            "customerName" to cart.customerNameSnapshot,
+            "statusCode" to cart.statusCode,
+            "statusName" to cart.statusName,
+            "statusColor" to cart.statusColor,
+            "total" to cart.total
+        )
+
+    private companion object {
+        const val ENTITY_TYPE_CART = "Cart"
     }
 }

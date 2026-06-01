@@ -8,8 +8,9 @@ import com.msa.eshop.backend.common.dtos.AuditLogDto
 import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.toPageResponse
 import com.msa.eshop.backend.domain.entity.AuditLog
-import com.msa.eshop.backend.domain.repository.AuditLogRepository
 import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.repository.AuditLogRepository
+import com.msa.eshop.backend.security.ClientIpResolver
 import com.msa.eshop.backend.service.CurrentUserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Service
@@ -22,7 +23,8 @@ import java.time.OffsetDateTime
 class AuditLogService(
     private val auditLogRepository: AuditLogRepository,
     private val currentUserService: CurrentUserService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val clientIpResolver: ClientIpResolver
 ) {
 
     @Transactional
@@ -49,7 +51,7 @@ class AuditLogService(
             oldValue = normalizeValue(oldValue),
             newValue = normalizeValue(newValue),
 
-            ipAddress = extractIpAddress(request),
+            ipAddress = request?.let { clientIpResolver.resolve(it).take(MAX_IP_LENGTH) },
             userAgent = request?.getHeader("User-Agent")?.take(MAX_USER_AGENT_LENGTH),
 
             description = description?.trim()?.takeIf { it.isNotBlank() }
@@ -92,9 +94,7 @@ class AuditLogService(
 
     fun snapshotOf(
         vararg values: Pair<String, Any?>
-    ): Map<String, Any?> {
-        return values.toMap()
-    }
+    ): Map<String, Any?> = values.toMap()
 
     private fun currentActorOrNull(): Customer? {
         return runCatching {
@@ -109,38 +109,57 @@ class AuditLogService(
         return attributes?.request
     }
 
-    private fun extractIpAddress(request: HttpServletRequest?): String? {
-        if (request == null) return null
-
-        val forwardedFor = request.getHeader("X-Forwarded-For")
-            ?.split(",")
-            ?.firstOrNull()
-            ?.trim()
-            ?.takeIf { it.isNotBlank() }
-
-        if (forwardedFor != null) {
-            return forwardedFor.take(MAX_IP_LENGTH)
-        }
-
-        return request.remoteAddr
-            ?.trim()
-            ?.takeIf { it.isNotBlank() }
-            ?.take(MAX_IP_LENGTH)
-    }
-
     private fun normalizeValue(value: Any?): Map<String, Any?>? {
         if (value == null) return null
 
-        if (value is Map<*, *>) {
-            return value.entries.associate { entry ->
+        val rawMap = if (value is Map<*, *>) {
+            value.entries.associate { entry ->
                 entry.key.toString() to entry.value
+            }
+        } else {
+            objectMapper.convertValue(
+                value,
+                object : TypeReference<Map<String, Any?>>() {}
+            )
+        }
+
+        return maskSensitiveFields(rawMap)
+    }
+
+    private fun maskSensitiveFields(value: Map<String, Any?>): Map<String, Any?> =
+        value.mapValues { (key, entryValue) ->
+            when {
+                key.isSensitiveAuditKey() -> maskValue(entryValue)
+                entryValue is Map<*, *> -> entryValue.entries.associate { nested ->
+                    nested.key.toString() to nested.value
+                }.let { maskSensitiveFields(it) }
+                entryValue is Iterable<*> -> entryValue.map { item ->
+                    if (item is Map<*, *>) {
+                        maskSensitiveFields(
+                            item.entries.associate { nested ->
+                                nested.key.toString() to nested.value
+                            }
+                        )
+                    } else {
+                        item
+                    }
+                }
+                else -> entryValue
             }
         }
 
-        return objectMapper.convertValue(
-            value,
-            object : TypeReference<Map<String, Any?>>() {}
-        )
+    private fun String.isSensitiveAuditKey(): Boolean =
+        lowercase() in SENSITIVE_AUDIT_KEYS
+
+    private fun maskValue(value: Any?): Any? {
+        val text = value?.toString() ?: return null
+        if (text.isBlank()) return text
+
+        return when {
+            text.length <= 4 -> MASK
+            text.length <= 8 -> text.take(2) + MASK
+            else -> text.take(3) + MASK + text.takeLast(2)
+        }
     }
 
     private fun AuditLog.toDto(): AuditLogDto {
@@ -166,6 +185,22 @@ class AuditLogService(
         const val DEFAULT_SORT_DIRECTION = "DESC"
         const val MAX_IP_LENGTH = 64
         const val MAX_USER_AGENT_LENGTH = 500
+        const val MASK = "***"
+
+        val SENSITIVE_AUDIT_KEYS = setOf(
+            "password",
+            "passwordhash",
+            "token",
+            "refreshtoken",
+            "secret",
+            "mobile",
+            "phone",
+            "customermobile",
+            "customerphone",
+            "nationalcode",
+            "address",
+            "customeraddress"
+        )
 
         val ALLOWED_SORTS = setOf(
             "createdAt",

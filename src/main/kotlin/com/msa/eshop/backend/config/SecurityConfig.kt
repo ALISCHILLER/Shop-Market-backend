@@ -1,5 +1,6 @@
 package com.msa.eshop.backend.config
 
+import com.msa.eshop.backend.security.AuthRateLimitFilter
 import com.msa.eshop.backend.security.JwtAuthenticationFilter
 import com.msa.eshop.backend.security.RestAccessDeniedHandler
 import com.msa.eshop.backend.security.RestAuthenticationEntryPoint
@@ -23,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableMethodSecurity
 class SecurityConfig(
+    private val authRateLimitFilter: AuthRateLimitFilter,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val restAuthenticationEntryPoint: RestAuthenticationEntryPoint,
     private val restAccessDeniedHandler: RestAccessDeniedHandler,
@@ -38,16 +40,22 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        val origins = allowedOrigins.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val origins = allowedOrigins
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
         if (origins.contains("*")) {
             configuration.addAllowedOriginPattern("*")
         } else {
             configuration.allowedOrigins = origins
         }
+
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("Authorization", "Content-Type", "Accept")
-        configuration.exposedHeaders = listOf("Authorization")
+        configuration.exposedHeaders = listOf("Authorization", "Retry-After")
         configuration.allowCredentials = false
+        configuration.maxAge = CORS_MAX_AGE_SECONDS
 
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
@@ -63,6 +71,7 @@ class SecurityConfig(
             exceptions.authenticationEntryPoint(restAuthenticationEntryPoint)
             exceptions.accessDeniedHandler(restAccessDeniedHandler)
         }
+
         http.authorizeHttpRequests { auth ->
             auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -76,7 +85,14 @@ class SecurityConfig(
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         }
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+        http.addFilterBefore(authRateLimitFilter, JwtAuthenticationFilter::class.java)
+
         return http.build()
+    }
+
+    private companion object {
+        const val CORS_MAX_AGE_SECONDS = 3600L
     }
 }

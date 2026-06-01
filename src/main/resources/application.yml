@@ -79,10 +79,32 @@ app:
   jwt:
     secret: ${ESHOP_JWT_SECRET:change-me-to-a-very-long-secret-at-least-64-bytes-for-production}
     expiration-minutes: ${ESHOP_JWT_EXPIRATION_MINUTES:1440}
+
   auth:
     refresh-token-expiration-days: ${ESHOP_REFRESH_TOKEN_EXPIRATION_DAYS:30}
+
+  security:
+    trust-forwarded-headers: ${ESHOP_TRUST_FORWARDED_HEADERS:false}
+
+  rate-limit:
+    auth:
+      enabled: ${ESHOP_AUTH_RATE_LIMIT_ENABLED:true}
+      login:
+        capacity: ${ESHOP_AUTH_RATE_LIMIT_LOGIN_CAPACITY:10}
+        window-seconds: ${ESHOP_AUTH_RATE_LIMIT_LOGIN_WINDOW_SECONDS:60}
+      refresh:
+        capacity: ${ESHOP_AUTH_RATE_LIMIT_REFRESH_CAPACITY:30}
+        window-seconds: ${ESHOP_AUTH_RATE_LIMIT_REFRESH_WINDOW_SECONDS:60}
+      logout:
+        capacity: ${ESHOP_AUTH_RATE_LIMIT_LOGOUT_CAPACITY:60}
+        window-seconds: ${ESHOP_AUTH_RATE_LIMIT_LOGOUT_WINDOW_SECONDS:60}
+      change-password:
+        capacity: ${ESHOP_AUTH_RATE_LIMIT_CHANGE_PASSWORD_CAPACITY:5}
+        window-seconds: ${ESHOP_AUTH_RATE_LIMIT_CHANGE_PASSWORD_WINDOW_SECONDS:300}
+
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+
   invoice:
     tax-percent: ${ESHOP_TAX_PERCENT:9}
 

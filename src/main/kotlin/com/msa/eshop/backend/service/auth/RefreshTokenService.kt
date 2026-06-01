@@ -1,6 +1,7 @@
 package com.msa.eshop.backend.service.auth
 
 import com.msa.eshop.backend.common.BadRequestException
+import com.msa.eshop.backend.common.UnauthorizedException
 import com.msa.eshop.backend.domain.entity.Customer
 import com.msa.eshop.backend.domain.entity.RefreshToken
 import com.msa.eshop.backend.domain.repository.RefreshTokenRepository
@@ -26,12 +27,9 @@ class RefreshTokenService(
         userAgent: String?
     ): String {
         val rawToken = generateRawToken()
-        val tokenHash = hash(rawToken)
-
-        val refreshToken = RefreshToken(
+        val refreshToken = buildRefreshToken(
+            rawToken = rawToken,
             customer = customer,
-            tokenHash = tokenHash,
-            expiresAt = OffsetDateTime.now().plusDays(refreshTokenExpirationDays),
             ipAddress = ipAddress,
             userAgent = userAgent
         )
@@ -56,10 +54,51 @@ class RefreshTokenService(
     }
 
     @Transactional
+    fun rotate(
+        rawToken: String,
+        ipAddress: String?,
+        userAgent: String?
+    ): RefreshTokenRotation {
+        val tokenHash = hash(rawToken)
+        val now = OffsetDateTime.now()
+
+        val currentToken = refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
+            ?: throw BadRequestException("Refresh token معتبر نیست")
+
+        if (!currentToken.isActive(now)) {
+            throw BadRequestException("Refresh token منقضی یا غیرفعال شده است")
+        }
+
+        val customer = currentToken.customer
+
+        if (!customer.enabled) {
+            currentToken.revoke(now)
+            throw UnauthorizedException("حساب کاربری غیرفعال است")
+        }
+
+        currentToken.revoke(now)
+
+        val newRawToken = generateRawToken()
+        val newRefreshToken = buildRefreshToken(
+            rawToken = newRawToken,
+            customer = customer,
+            ipAddress = ipAddress,
+            userAgent = userAgent
+        )
+
+        refreshTokenRepository.save(newRefreshToken)
+
+        return RefreshTokenRotation(
+            customer = customer,
+            refreshToken = newRawToken
+        )
+    }
+
+    @Transactional
     fun revoke(rawToken: String) {
         val tokenHash = hash(rawToken)
 
-        val refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
+        val refreshToken = refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
             ?: return
 
         if (refreshToken.revokedAt == null) {
@@ -83,8 +122,21 @@ class RefreshTokenService(
         refreshTokenRepository.deleteByCustomerId(customerId)
     }
 
+    private fun buildRefreshToken(
+        rawToken: String,
+        customer: Customer,
+        ipAddress: String?,
+        userAgent: String?
+    ): RefreshToken = RefreshToken(
+        customer = customer,
+        tokenHash = hash(rawToken),
+        expiresAt = OffsetDateTime.now().plusDays(refreshTokenExpirationDays),
+        ipAddress = ipAddress?.take(MAX_IP_LENGTH),
+        userAgent = userAgent?.take(MAX_USER_AGENT_LENGTH)
+    )
+
     private fun generateRawToken(): String {
-        val bytes = ByteArray(64)
+        val bytes = ByteArray(RAW_TOKEN_BYTES)
         secureRandom.nextBytes(bytes)
 
         return Base64.getUrlEncoder()
@@ -100,6 +152,14 @@ class RefreshTokenService(
     }
 
     private companion object {
+        const val RAW_TOKEN_BYTES = 64
+        const val MAX_IP_LENGTH = 64
+        const val MAX_USER_AGENT_LENGTH = 500
         val secureRandom = SecureRandom()
     }
 }
+
+data class RefreshTokenRotation(
+    val customer: Customer,
+    val refreshToken: String
+)

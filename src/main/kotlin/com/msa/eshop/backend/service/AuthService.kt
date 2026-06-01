@@ -106,26 +106,18 @@ class AuthService(
         ipAddress: String?,
         userAgent: String?
     ): RefreshTokenResponseDto {
-        val storedRefreshToken = refreshTokenService.validate(request.refreshToken)
-        val customer = storedRefreshToken.customer
-
-        if (!customer.enabled) {
-            throw UnauthorizedException("حساب کاربری غیرفعال است")
-        }
-
-        refreshTokenService.revoke(request.refreshToken)
-
-        val newAccessToken = jwtTokenService.generateToken(customer)
-
-        val newRefreshToken = refreshTokenService.create(
-            customer = customer,
+        val rotation = refreshTokenService.rotate(
+            rawToken = request.refreshToken,
             ipAddress = ipAddress,
             userAgent = userAgent
         )
 
+        val customer = rotation.customer
+        val newAccessToken = jwtTokenService.generateToken(customer)
+
         return RefreshTokenResponseDto(
             token = newAccessToken,
-            refreshToken = newRefreshToken,
+            refreshToken = rotation.refreshToken,
             passwordChangeRequired = customer.passwordChangeRequired
         )
     }
