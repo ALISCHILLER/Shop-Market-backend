@@ -22,14 +22,9 @@ import java.util.UUID
 class AdminAddressController(
     private val addressService: AdminAddressService
 ) {
+
     @GetMapping
     fun addresses(
-        @RequestParam(required = false) customerId: UUID?
-    ): BaseResponse<List<OrderAddressDto>> =
-        BaseResponse(addressService.findAll(customerId))
-
-    @GetMapping("/page")
-    fun addressesPage(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(required = false) customerId: UUID?,
@@ -38,7 +33,7 @@ class AdminAddressController(
         @RequestParam(defaultValue = "DESC") direction: String
     ): BaseResponse<PageResponseDto<OrderAddressDto>> =
         BaseResponse(
-            addressService.search(
+            data = addressService.search(
                 page = page,
                 size = size,
                 customerId = customerId,
@@ -52,20 +47,24 @@ class AdminAddressController(
     fun create(
         @Valid @RequestBody request: UpsertAddressRequest
     ): BaseResponse<OrderAddressDto> =
-        BaseResponse(addressService.create(request))
+        BaseResponse(
+            data = addressService.create(request)
+        )
 
     @PutMapping("/{id}")
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpsertAddressRequest
     ): BaseResponse<OrderAddressDto> =
-        BaseResponse(addressService.update(id, request))
+        BaseResponse(
+            data = addressService.update(id, request)
+        )
 
     @DeleteMapping("/{id}")
     fun delete(
         @PathVariable id: UUID
     ): BaseResponse<Boolean> {
         addressService.delete(id)
-        return BaseResponse(true)
+        return BaseResponse(data = true)
     }
 }

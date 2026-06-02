@@ -2,10 +2,14 @@ package com.msa.eshop.backend.service.admin
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
+import com.msa.eshop.backend.common.cleanOrNull
+import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.dtos.DiscountResultDto
+import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.UpsertDiscountRequest
 import com.msa.eshop.backend.common.requireMin
 import com.msa.eshop.backend.common.requirePercent
+import com.msa.eshop.backend.common.toPageResponse
 import com.msa.eshop.backend.domain.entity.Discount
 import com.msa.eshop.backend.domain.repository.DiscountRepository
 import com.msa.eshop.backend.service.audit.AuditLogService
@@ -23,9 +27,40 @@ class AdminDiscountService(
 ) {
 
     @Transactional(readOnly = true)
-    fun findAll(): List<DiscountResultDto> =
-        discountRepository.findAllByOrderByFromNumberAsc()
-            .map { it.toDto() }
+    fun search(
+        page: Int,
+        size: Int,
+        productIdOrCode: String?,
+        search: String?,
+        sortBy: String = DEFAULT_SORT_BY,
+        direction: String = DEFAULT_SORT_DIRECTION
+    ): PageResponseDto<DiscountResultDto> {
+        val productFilter = productIdOrCode.cleanOrNull()
+
+        val productId = productFilter
+            ?.let { runCatching { UUID.fromString(it) }.getOrNull() }
+
+        val productCode = if (productId == null) {
+            productFilter?.toIntOrNull()
+        } else {
+            null
+        }
+
+        val pageable = createPageable(
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            direction = direction,
+            allowedSorts = ALLOWED_SORTS
+        )
+
+        return discountRepository.searchAdminDiscounts(
+            productId = productId,
+            productCode = productCode,
+            search = search.cleanOrNull(),
+            pageable = pageable
+        ).toPageResponse { it.toDto() }
+    }
 
     @Transactional
     fun create(request: UpsertDiscountRequest): DiscountResultDto {
@@ -159,5 +194,14 @@ class AdminDiscountService(
 
     private companion object {
         const val ENTITY_TYPE_DISCOUNT = "Discount"
+        const val DEFAULT_SORT_BY = "fromNumber"
+        const val DEFAULT_SORT_DIRECTION = "ASC"
+
+        val ALLOWED_SORTS = setOf(
+            "fromNumber",
+            "endNumber",
+            "discountPercent",
+            "createdAt"
+        )
     }
 }

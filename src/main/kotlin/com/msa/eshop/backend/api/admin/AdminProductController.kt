@@ -22,12 +22,9 @@ import java.util.UUID
 class AdminProductController(
     private val productService: AdminProductService
 ) {
-    @GetMapping
-    fun products(): BaseResponse<List<ProductDto>> =
-        BaseResponse(productService.findAll())
 
-    @GetMapping("/page")
-    fun productsPage(
+    @GetMapping
+    fun products(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(required = false) search: String?,
@@ -38,7 +35,7 @@ class AdminProductController(
         @RequestParam(defaultValue = "ASC") direction: String
     ): BaseResponse<PageResponseDto<ProductDto>> =
         BaseResponse(
-            productService.search(
+            data = productService.search(
                 page = page,
                 size = size,
                 search = search,
@@ -54,20 +51,24 @@ class AdminProductController(
     fun create(
         @Valid @RequestBody request: UpsertProductRequest
     ): BaseResponse<ProductDto> =
-        BaseResponse(productService.create(request))
+        BaseResponse(
+            data = productService.create(request)
+        )
 
     @PutMapping("/{id}")
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpsertProductRequest
     ): BaseResponse<ProductDto> =
-        BaseResponse(productService.update(id, request))
+        BaseResponse(
+            data = productService.update(id, request)
+        )
 
     @DeleteMapping("/{id}")
     fun delete(
         @PathVariable id: UUID
     ): BaseResponse<Boolean> {
         productService.delete(id)
-        return BaseResponse(true)
+        return BaseResponse(data = true)
     }
 }

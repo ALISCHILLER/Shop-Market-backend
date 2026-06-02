@@ -22,12 +22,9 @@ import java.util.UUID
 class AdminCustomerController(
     private val customerService: AdminCustomerService
 ) {
-    @GetMapping
-    fun customers(): BaseResponse<List<UserDto>> =
-        BaseResponse(customerService.findAll())
 
-    @GetMapping("/page")
-    fun customersPage(
+    @GetMapping
+    fun customers(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(required = false) search: String?,
@@ -37,7 +34,7 @@ class AdminCustomerController(
         @RequestParam(defaultValue = "DESC") direction: String
     ): BaseResponse<PageResponseDto<UserDto>> =
         BaseResponse(
-            customerService.search(
+            data = customerService.search(
                 page = page,
                 size = size,
                 search = search,
@@ -52,20 +49,24 @@ class AdminCustomerController(
     fun create(
         @Valid @RequestBody request: UpsertCustomerRequest
     ): BaseResponse<UserDto> =
-        BaseResponse(customerService.create(request))
+        BaseResponse(
+            data = customerService.create(request)
+        )
 
     @PutMapping("/{id}")
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpsertCustomerRequest
     ): BaseResponse<UserDto> =
-        BaseResponse(customerService.update(id, request))
+        BaseResponse(
+            data = customerService.update(id, request)
+        )
 
     @DeleteMapping("/{id}")
     fun delete(
         @PathVariable id: UUID
     ): BaseResponse<Boolean> {
         customerService.delete(id)
-        return BaseResponse(true)
+        return BaseResponse(data = true)
     }
 }

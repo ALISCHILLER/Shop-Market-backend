@@ -12,6 +12,9 @@ springdoc:
     enabled: false
 
 spring:
+  flyway:
+    locations:
+      - classpath:db/migration/common
   jpa:
     properties:
       hibernate:

@@ -38,7 +38,9 @@ spring:
         batch_versioned_data: true
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    baseline-on-migrate: false
+    locations:
+      - classpath:db/migration/common
   jackson:
     default-property-inclusion: always
     serialization:

@@ -1,6 +1,8 @@
 package com.msa.eshop.backend.domain.repository
 
 import com.msa.eshop.backend.domain.entity.Discount
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -20,6 +22,34 @@ interface DiscountRepository : JpaRepository<Discount, UUID> {
 
     @EntityGraph(attributePaths = ["product"])
     fun findAllByOrderByFromNumberAsc(): List<Discount>
+
+    @EntityGraph(attributePaths = ["product"])
+    @Query(
+        """
+        select d
+        from Discount d
+        join d.product p
+        where (
+            :productId is null
+            or p.id = :productId
+        )
+        and (
+            :productCode is null
+            or p.productCode = :productCode
+        )
+        and (
+            :search is null
+            or lower(coalesce(p.productName, '')) like lower(concat('%', :search, '%'))
+            or cast(p.productCode as string) like concat('%', :search, '%')
+        )
+        """
+    )
+    fun searchAdminDiscounts(
+        @Param("productId") productId: UUID?,
+        @Param("productCode") productCode: Int?,
+        @Param("search") search: String?,
+        pageable: Pageable
+    ): Page<Discount>
 
     @Query(
         """

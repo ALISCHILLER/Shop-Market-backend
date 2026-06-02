@@ -61,19 +61,15 @@ class AuthRateLimitFilter(
         val path = request.servletPath.ifBlank { request.requestURI }
 
         return when (path) {
-            "/api/v1/User/loginUser",
             "/api/v1/auth/login" ->
                 MatchedRule("login", properties.login)
 
-            "/api/v1/User/refresh",
             "/api/v1/auth/refresh" ->
                 MatchedRule("refresh", properties.refresh)
 
-            "/api/v1/User/logout",
             "/api/v1/auth/logout" ->
                 MatchedRule("logout", properties.logout)
 
-            "/api/v1/User/changepassword",
             "/api/v1/auth/change-password" ->
                 MatchedRule("change-password", properties.changePassword)
 
