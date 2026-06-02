@@ -26,6 +26,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev,docker}
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
       SERVER_PORT: 8282
 
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eshop}

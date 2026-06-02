@@ -1,4 +1,8 @@
 spring:
+  docker:
+    compose:
+      enabled: false
+
   jpa:
     properties:
       hibernate:

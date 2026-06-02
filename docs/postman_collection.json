@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Shop Market Compose Backend",
+    "name": "Shop Market Backend - Clean REST API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -9,13 +9,29 @@
       "value": "http://localhost:8282"
     },
     {
-      "key": "token",
+      "key": "accessToken",
       "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": "00000000-0000-0000-0000-000000000101"
+    },
+    {
+      "key": "paymentTermId",
+      "value": "16ccab60-279b-410a-90d1-b2673d5d1dd1"
+    },
+    {
+      "key": "addressId",
+      "value": "00000000-0000-0000-0000-000000003001"
     }
   ],
   "item": [
     {
-      "name": "Login customer",
+      "name": "Auth - Login Customer",
       "request": {
         "method": "POST",
         "header": [
@@ -24,7 +40,7 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/api/v1/User/loginUser",
+        "url": "{{baseUrl}}/api/v1/auth/login",
         "body": {
           "mode": "raw",
           "raw": "{\"customerCode\":\"1001\",\"password\":\"123456\"}"
@@ -32,58 +48,188 @@
       }
     },
     {
-      "name": "Products",
+      "name": "Auth - Login Admin",
       "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/api/v1/Product/GetListKala"
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customerCode\":\"admin\",\"password\":\"admin123\"}"
+        }
       }
     },
     {
-      "name": "Categories",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/api/v1/Product/GetProductCategory"
-      }
-    },
-    {
-      "name": "Banners",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/api/v1/Banner/GetBanner"
-      }
-    },
-    {
-      "name": "Profile",
+      "name": "Auth - Me",
       "request": {
         "method": "GET",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}"
+            "value": "Bearer {{accessToken}}"
           }
         ],
-        "url": "{{baseUrl}}/api/v1/User/CustomerProfile"
+        "url": "{{baseUrl}}/api/v1/auth/me"
       }
     },
     {
-      "name": "Simulate cart",
+      "name": "Catalog - Products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/products?page=0&size=20"
+      }
+    },
+    {
+      "name": "Catalog - Product Details",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/products/{{productId}}"
+      }
+    },
+    {
+      "name": "Catalog - Product Discounts",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/products/{{productId}}/discounts"
+      }
+    },
+    {
+      "name": "Catalog - Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/product-categories"
+      }
+    },
+    {
+      "name": "Catalog - Banners",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/banners"
+      }
+    },
+    {
+      "name": "Cart - Addresses",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/cart/addresses"
+      }
+    },
+    {
+      "name": "Cart - Payment Terms",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/cart/payment-terms"
+      }
+    },
+    {
+      "name": "Cart - Simulate",
       "request": {
         "method": "POST",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}"
+            "value": "Bearer {{accessToken}}"
           },
           {
             "key": "Content-Type",
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/api/v1/Cart/GetCartSimulateRsult",
+        "url": "{{baseUrl}}/api/v1/cart/simulate",
         "body": {
           "mode": "raw",
-          "raw": "[{\"productCode\":100101,\"quantity\":2}]"
+          "raw": "{\"paymentTermId\":\"{{paymentTermId}}\",\"items\":[{\"productCode\":100101,\"quantity\":2}]}"
         }
+      }
+    },
+    {
+      "name": "Cart - Checkout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/cart/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customerAddressId\":\"{{addressId}}\",\"paymentTermId\":\"{{paymentTermId}}\",\"items\":[{\"productCode\":100101,\"quantity\":2}]}"
+        }
+      }
+    },
+    {
+      "name": "Cart - History",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/cart/history"
+      }
+    },
+    {
+      "name": "Admin - Products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/admin/products?page=0&size=20"
+      }
+    },
+    {
+      "name": "Admin - Customers",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/admin/customers?page=0&size=20"
+      }
+    },
+    {
+      "name": "Admin - Discounts",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/admin/discounts?page=0&size=20"
       }
     }
   ]
