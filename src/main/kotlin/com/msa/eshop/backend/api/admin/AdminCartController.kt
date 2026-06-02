@@ -2,8 +2,8 @@ package com.msa.eshop.backend.api.admin
 
 import com.msa.eshop.backend.common.dtos.AdminCartSummaryDto
 import com.msa.eshop.backend.common.BaseResponse
+import com.msa.eshop.backend.common.dtos.CartDetailsLineDto
 import com.msa.eshop.backend.common.dtos.PageResponseDto
-import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
 import com.msa.eshop.backend.common.dtos.UpdateCartStatusRequest
 import com.msa.eshop.backend.service.admin.AdminCartService
 import jakarta.validation.Valid
@@ -49,7 +49,7 @@ class AdminCartController(
     @GetMapping("/{cartCode}")
     fun details(
         @PathVariable cartCode: Int
-    ): BaseResponse<List<ReportCartDetailsDto>> =
+    ): BaseResponse<List<CartDetailsLineDto>> =
         BaseResponse(cartService.details(cartCode))
 
     @PutMapping("/{cartCode}/status")

@@ -1,13 +1,13 @@
 package com.msa.eshop.backend.api
 
 import com.msa.eshop.backend.common.BaseResponse
-import com.msa.eshop.backend.common.TokenResponse
-import com.msa.eshop.backend.common.UserResponse
 import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
+import com.msa.eshop.backend.common.dtos.LoginRequest
+import com.msa.eshop.backend.common.dtos.LoginResponse
 import com.msa.eshop.backend.common.dtos.LogoutRequest
 import com.msa.eshop.backend.common.dtos.RefreshTokenRequest
-import com.msa.eshop.backend.common.dtos.RefreshTokenResponseDto
-import com.msa.eshop.backend.common.dtos.TokenRequest
+import com.msa.eshop.backend.common.dtos.RefreshTokenResponse
+import com.msa.eshop.backend.common.dtos.UserDto
 import com.msa.eshop.backend.security.ClientIpResolver
 import com.msa.eshop.backend.service.AuthService
 import com.msa.eshop.backend.service.CurrentUserService
@@ -21,61 +21,37 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/User")
-class UserController(
+@RequestMapping("/api/v1/auth")
+class AuthController(
     private val authService: AuthService,
     private val currentUserService: CurrentUserService,
     private val clientIpResolver: ClientIpResolver
 ) {
 
-    @PostMapping("/loginUser")
+    @PostMapping("/login")
     fun login(
-        @RequestBody request: TokenRequest,
+        @Valid @RequestBody request: LoginRequest,
         httpRequest: HttpServletRequest
-    ): TokenResponse {
-        val loginData = authService.login(
-            request = request,
-            ipAddress = clientIpResolver.resolve(httpRequest),
-            userAgent = httpRequest.getHeader("User-Agent")
-        )
-
-        return TokenResponse(
-            token = loginData.token,
-            refreshToken = loginData.refreshToken,
-            passwordChangeRequired = loginData.passwordChangeRequired,
-            data = loginData
-        )
-    }
-
-    @GetMapping("/CustomerProfile")
-    fun profile(): UserResponse =
-        UserResponse(
-            user = listOf(currentUserService.requireCustomer().toDto())
-        )
-
-    @PostMapping("/changepassword")
-    fun changePassword(
-        @Valid @RequestBody request: ChangePasswordRequest
-    ): BaseResponse<Boolean> =
+    ): BaseResponse<LoginResponse> =
         BaseResponse(
-            data = authService.changePassword(request),
-            hasError = false,
-            message = null
+            data = authService.login(
+                request = request,
+                ipAddress = clientIpResolver.resolve(httpRequest),
+                userAgent = httpRequest.getHeader("User-Agent")
+            )
         )
 
     @PostMapping("/refresh")
     fun refresh(
         @Valid @RequestBody request: RefreshTokenRequest,
         httpRequest: HttpServletRequest
-    ): BaseResponse<RefreshTokenResponseDto> =
+    ): BaseResponse<RefreshTokenResponse> =
         BaseResponse(
             data = authService.refreshToken(
                 request = request,
                 ipAddress = clientIpResolver.resolve(httpRequest),
                 userAgent = httpRequest.getHeader("User-Agent")
-            ),
-            hasError = false,
-            message = null
+            )
         )
 
     @PostMapping("/logout")
@@ -83,8 +59,20 @@ class UserController(
         @Valid @RequestBody request: LogoutRequest
     ): BaseResponse<Boolean> =
         BaseResponse(
-            data = authService.logout(request),
-            hasError = false,
-            message = null
+            data = authService.logout(request)
+        )
+
+    @PostMapping("/change-password")
+    fun changePassword(
+        @Valid @RequestBody request: ChangePasswordRequest
+    ): BaseResponse<Boolean> =
+        BaseResponse(
+            data = authService.changePassword(request)
+        )
+
+    @GetMapping("/me")
+    fun me(): BaseResponse<UserDto> =
+        BaseResponse(
+            data = currentUserService.requireCustomer().toDto()
         )
 }

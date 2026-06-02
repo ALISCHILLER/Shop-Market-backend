@@ -7,7 +7,6 @@ import com.msa.eshop.backend.domain.repository.PaymentTermRepository
 import com.msa.eshop.backend.service.PricingRequest
 import com.msa.eshop.backend.service.PricingService
 import com.msa.eshop.backend.service.catalog.ProductResolver
-import com.msa.eshop.backend.service.pricing.PaymentKindResolver
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -17,7 +16,6 @@ class CartPricingCalculator(
     private val paymentTermRepository: PaymentTermRepository,
     private val productResolver: ProductResolver,
     private val pricingService: PricingService,
-    private val paymentKindResolver: PaymentKindResolver
 ) {
 
     @Transactional(readOnly = true)
@@ -27,7 +25,7 @@ class CartPricingCalculator(
         }
 
         val paymentTerm = resolvePaymentTerm(request.paymentTermId)
-        val paymentKind = paymentKindResolver.resolve(paymentTerm)
+        val paymentKind = paymentTerm.paymentKind
 
         val productsByCode = productResolver.requireByCodes(
             request.lines.map { it.productCode }

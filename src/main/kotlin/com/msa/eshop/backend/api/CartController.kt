@@ -1,20 +1,18 @@
 package com.msa.eshop.backend.api
 
 import com.msa.eshop.backend.common.BaseResponse
-import com.msa.eshop.backend.common.InsertCartModelResponse
-import com.msa.eshop.backend.common.PaymentTermResponse
-import com.msa.eshop.backend.common.ReportCartDetailsResponse
-import com.msa.eshop.backend.common.ReportHistoryCustomerResponse
-import com.msa.eshop.backend.common.SimulateResultModel
+import com.msa.eshop.backend.common.dtos.CartCheckoutRequest
+import com.msa.eshop.backend.common.dtos.CartCheckoutResponse
+import com.msa.eshop.backend.common.dtos.CartDetailsDto
+import com.msa.eshop.backend.common.dtos.CartHistoryDto
 import com.msa.eshop.backend.common.dtos.CartSimulateRequest
 import com.msa.eshop.backend.common.dtos.CartSimulateResponse
-import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
-import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerModelRequest
-import com.msa.eshop.backend.common.dtos.SimulateModelRequest
+import com.msa.eshop.backend.common.dtos.OrderAddressDto
+import com.msa.eshop.backend.common.dtos.PaymentTermDto
 import com.msa.eshop.backend.service.CartService
 import jakarta.validation.Valid
-import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -22,46 +20,56 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/Cart")
-@Validated
+@RequestMapping("/api/v1/cart")
 class CartController(
     private val cartService: CartService
 ) {
-    @PostMapping("/GetCartSimulateRsult")
-    fun simulate(
-        @Valid @RequestBody request: List<@Valid SimulateModelRequest>
-    ): SimulateResultModel =
-        SimulateResultModel(cartService.simulate(request))
 
-    @PostMapping("/Simulate")
-    fun simulateModern(
+    @GetMapping("/addresses")
+    fun addresses(): BaseResponse<List<OrderAddressDto>> =
+        BaseResponse(
+            data = cartService.currentCustomerAddresses()
+        )
+
+    @GetMapping("/payment-terms")
+    fun paymentTerms(): BaseResponse<List<PaymentTermDto>> =
+        BaseResponse(
+            data = cartService.paymentTerms()
+        )
+
+    @PostMapping("/simulate")
+    fun simulate(
         @Valid @RequestBody request: CartSimulateRequest
     ): BaseResponse<CartSimulateResponse> =
         BaseResponse(
-            data = cartService.simulateModern(request),
-            hasError = false,
-            message = null
+            data = cartService.simulate(request)
         )
 
-    @GetMapping("/GetPaymentTerm")
-    fun paymentTerms(): PaymentTermResponse =
-        PaymentTermResponse(cartService.paymentTerms())
+    @PostMapping("/checkout")
+    fun checkout(
+        @Valid @RequestBody request: CartCheckoutRequest
+    ): BaseResponse<CartCheckoutResponse> =
+        BaseResponse(
+            data = cartService.checkout(request)
+        )
 
-    @PostMapping("/InsertCart")
-    fun insertCart(
-        @Valid @RequestBody request: List<@Valid InsertCartModelRequest>
-    ): InsertCartModelResponse =
-        InsertCartModelResponse(cartService.insertCart(request))
-
-    @PostMapping("/ReportHistoryCustomer")
+    @GetMapping("/history")
     fun history(
-        @RequestBody request: ReportHistoryCustomerModelRequest
-    ): ReportHistoryCustomerResponse =
-        ReportHistoryCustomerResponse(cartService.history(request))
+        @RequestParam(required = false) fromDate: String?,
+        @RequestParam(required = false) toDate: String?
+    ): BaseResponse<List<CartHistoryDto>> =
+        BaseResponse(
+            data = cartService.history(
+                fromDate = fromDate,
+                toDate = toDate
+            )
+        )
 
-    @GetMapping("/ReportCartDetails")
+    @GetMapping("/{cartCode}")
     fun details(
-        @RequestParam("CartCode") cartCode: Int
-    ): ReportCartDetailsResponse =
-        ReportCartDetailsResponse(cartService.details(cartCode))
+        @PathVariable cartCode: Int
+    ): BaseResponse<CartDetailsDto> =
+        BaseResponse(
+            data = cartService.details(cartCode)
+        )
 }

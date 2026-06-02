@@ -5,8 +5,8 @@ import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.cleanOrNull
 import com.msa.eshop.backend.common.createPageable
 import com.msa.eshop.backend.common.dtos.AdminCartSummaryDto
+import com.msa.eshop.backend.common.dtos.CartDetailsLineDto
 import com.msa.eshop.backend.common.dtos.PageResponseDto
-import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
 import com.msa.eshop.backend.common.dtos.UpdateCartStatusRequest
 import com.msa.eshop.backend.common.parseClientDateOrNull
 import com.msa.eshop.backend.common.toPageResponse
@@ -92,7 +92,7 @@ class AdminCartService(
     }
 
     @Transactional(readOnly = true)
-    fun details(cartCode: Int): List<ReportCartDetailsDto> {
+    fun details(cartCode: Int): List<CartDetailsLineDto> {
         if (cartCode <= 0) {
             throw BadRequestException("کد سفارش معتبر نیست")
         }
@@ -103,10 +103,7 @@ class AdminCartService(
         return cart.items
             .sortedBy { it.productCode }
             .map { item ->
-                adminCartMapper.toDetailsDto(
-                    cart = cart,
-                    item = item
-                )
+                adminCartMapper.toDetailsDto(item)
             }
     }
 

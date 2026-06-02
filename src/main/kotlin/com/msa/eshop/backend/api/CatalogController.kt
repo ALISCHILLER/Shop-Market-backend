@@ -16,7 +16,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1")
-class CatalogRestController(
+class CatalogController(
     private val catalogService: CatalogService
 ) {
 

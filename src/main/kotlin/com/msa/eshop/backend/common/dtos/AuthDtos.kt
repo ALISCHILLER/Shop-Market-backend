@@ -2,14 +2,18 @@ package com.msa.eshop.backend.common.dtos
 
 import jakarta.validation.constraints.NotBlank
 
-data class TokenRequest(
-    val customerCode: String? = null,
-    val password: String? = null
+data class LoginRequest(
+    @field:NotBlank(message = "کد مشتری الزامی است")
+    val customerCode: String,
+
+    @field:NotBlank(message = "رمز عبور الزامی است")
+    val password: String
 )
 
-data class LoginDataDto(
-    val token: String,
+data class LoginResponse(
+    val accessToken: String,
     val refreshToken: String,
+    val tokenType: String = "Bearer",
     val passwordChangeRequired: Boolean
 )
 
@@ -18,9 +22,10 @@ data class RefreshTokenRequest(
     val refreshToken: String
 )
 
-data class RefreshTokenResponseDto(
-    val token: String,
+data class RefreshTokenResponse(
+    val accessToken: String,
     val refreshToken: String,
+    val tokenType: String = "Bearer",
     val passwordChangeRequired: Boolean
 )
 
@@ -30,9 +35,9 @@ data class LogoutRequest(
 )
 
 data class ChangePasswordRequest(
-    @field:NotBlank(message = "رمز عبور فعلی را وارد کنید")
+    @field:NotBlank(message = "رمز عبور فعلی الزامی است")
     val oldPassword: String,
 
-    @field:NotBlank(message = "رمز عبور جدید را وارد کنید")
+    @field:NotBlank(message = "رمز عبور جدید الزامی است")
     val newPassword: String
 )

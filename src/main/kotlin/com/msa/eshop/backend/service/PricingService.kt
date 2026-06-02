@@ -1,7 +1,6 @@
 package com.msa.eshop.backend.service
 
 import com.msa.eshop.backend.common.Money
-import com.msa.eshop.backend.common.dtos.SimulateDto
 import com.msa.eshop.backend.common.requirePercent
 import com.msa.eshop.backend.domain.entity.Discount
 import com.msa.eshop.backend.domain.repository.DiscountRepository
@@ -67,128 +66,6 @@ class PricingService(
                 productDiscounts = discountsByProductId[productId].orEmpty()
             )
         }
-    }
-
-    @Transactional(readOnly = true)
-    fun simulate(
-        product: Product,
-        quantity: Int,
-        paymentTerm: PaymentTerm?
-    ): SimulateDto {
-        val discounts = product.id
-            ?.let { discountRepository.findByProductId(it) }
-            .orEmpty()
-
-        return buildSimulateDto(
-            product = product,
-            quantity = quantity,
-            paymentTerm = paymentTerm,
-            productDiscounts = discounts
-        )
-    }
-
-    @Transactional(readOnly = true)
-    fun simulateBatch(
-        requests: List<PricingRequest>,
-        paymentTerm: PaymentTerm?
-    ): List<SimulateDto> {
-        if (requests.isEmpty()) return emptyList()
-
-        val discountsByProductId = loadDiscountsByProductId(
-            requests.map { it.product }
-        )
-
-        return requests.map { request ->
-            val productId = requireNotNull(request.product.id) {
-                "Product must be persisted before simulation"
-            }
-
-            buildSimulateDto(
-                product = request.product,
-                quantity = request.quantity,
-                paymentTerm = paymentTerm,
-                productDiscounts = discountsByProductId[productId].orEmpty()
-            )
-        }
-    }
-
-    private fun buildSimulateDto(
-        product: Product,
-        quantity: Int,
-        paymentTerm: PaymentTerm?,
-        productDiscounts: List<Discount>
-    ): SimulateDto {
-        val receipt = calculateInternal(
-            product = product,
-            quantity = quantity,
-            paymentTerm = paymentTerm,
-            paymentKind = PaymentKind.RECEIPT,
-            productDiscounts = productDiscounts
-        )
-
-        val immediate = calculateInternal(
-            product = product,
-            quantity = quantity,
-            paymentTerm = paymentTerm,
-            paymentKind = PaymentKind.IMMEDIATE,
-            productDiscounts = productDiscounts
-        )
-
-        val cheque = calculateInternal(
-            product = product,
-            quantity = quantity,
-            paymentTerm = paymentTerm,
-            paymentKind = PaymentKind.CHEQUE,
-            productDiscounts = productDiscounts
-        )
-
-        return SimulateDto(
-            convertFactor1 = product.convertFactor1,
-            convertFactor2 = product.convertFactor2,
-            discountPercent = receipt.productDiscountPercent,
-
-            discount_Percent_PaymentTerm_Receipt = receipt.paymentDiscount.toPersistedLong(),
-            discount_Percent_PaymentTerm_Receipt_Tax = receipt.tax.toPersistedLong(),
-
-            discount_Percent_PaymentTerm_cheque = cheque.paymentDiscount.toPersistedLong(),
-            discount_Percent_PaymentTerm_cheque_Tax = cheque.tax.toPersistedLong(),
-
-            discount_Percent_PaymentTerm_immediate = immediate.paymentDiscount.toPersistedLong(),
-            discount_Percent_PaymentTerm_immediate_Tax = immediate.tax.toPersistedLong(),
-
-            finalPrice = receipt.gross.toPersistedLong(),
-            finalPriceDiscount = receipt.afterProductDiscount.toPersistedLong(),
-
-            fullNameKala1 = product.fullNameKala1.orEmpty(),
-            fullNameKala2 = product.fullNameKala2.orEmpty(),
-
-            id = requireNotNull(product.id).toString(),
-            isTax = product.isTax,
-            paymentTermId = paymentTerm?.id?.toString(),
-
-            price = product.price,
-            priceByDiscountPercent = receipt.afterProductDiscount.toPersistedLong(),
-            priceByDiscountPercentAndTax =
-                (receipt.afterProductDiscount + receipt.taxWithoutPaymentDiscount).toPersistedLong(),
-
-            priceByDiscountPercentAndTax_Receipt = receipt.total.toPersistedLong(),
-            priceByDiscountPercentAndTax_cheque = cheque.total.toPersistedLong(),
-            priceByDiscountPercentAndTax_immediate = immediate.total.toPersistedLong(),
-
-            priceDiscount = receipt.productDiscount.toPersistedLong(),
-
-            productCode = product.productCode,
-            productGroupCode = product.productGroupCode,
-            productImage = product.productImage.orEmpty(),
-            productName = product.productName.orEmpty(),
-
-            quantity = quantity,
-
-            unit1 = product.unit1.orEmpty(),
-            unit2 = product.unit2.orEmpty(),
-            unitid1 = product.unitid1.orEmpty(),
-            unitid2 = product.unitid2.orEmpty()
-        )
     }
 
     private fun calculateInternal(

@@ -76,28 +76,21 @@ class SecurityConfig(
             auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Legacy auth endpoints
-                .requestMatchers(HttpMethod.POST, "/api/v1/User/loginUser").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/User/refresh").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/User/logout").permitAll()
-
-                // Modern auth endpoints
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
 
-                // Legacy public catalog
-                .requestMatchers(HttpMethod.GET, "/api/v1/Product/**", "/api/v1/Banner/**").permitAll()
-
-                // Modern public catalog
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/product-categories").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/banners").permitAll()
 
                 .requestMatchers("/actuator/health/**").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
+
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
                 .anyRequest().authenticated()
         }
 

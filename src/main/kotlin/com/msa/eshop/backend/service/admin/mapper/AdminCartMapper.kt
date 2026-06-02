@@ -1,8 +1,7 @@
 package com.msa.eshop.backend.service.admin.mapper
 
-
 import com.msa.eshop.backend.common.dtos.AdminCartSummaryDto
-import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
+import com.msa.eshop.backend.common.dtos.CartDetailsLineDto
 import com.msa.eshop.backend.domain.entity.Cart
 import com.msa.eshop.backend.domain.entity.CartItem
 import com.msa.eshop.backend.domain.entity.CartStatus
@@ -41,22 +40,17 @@ class AdminCartMapper {
     }
 
     fun toDetailsDto(
-        cart: Cart,
         item: CartItem
-    ): ReportCartDetailsDto =
-        ReportCartDetailsDto(
-            id = requireNotNull(item.id).toString(),
-            cartCode = cart.cartCode,
-            customerAddress = cart.customerAddressSnapshot,
-            customerName = cart.customerNameSnapshot,
-            discount = item.discount,
-            price = item.price,
-            productCode = item.productCode.toString(),
-            productImageUrl = item.productImageUrl.orEmpty(),
+    ): CartDetailsLineDto =
+        CartDetailsLineDto(
+            id = requireNotNull(item.id),
+            productId = item.product?.id,
+            productCode = item.productCode,
             productName = item.productName,
+            productImageUrl = item.productImageUrl,
             quantity = item.quantity,
-            salesDate = cart.salesDate.toString(),
-            statusName = cart.statusName,
+            unitPrice = item.price,
+            discount = item.discount,
             tax = item.tax,
             total = item.total
         )

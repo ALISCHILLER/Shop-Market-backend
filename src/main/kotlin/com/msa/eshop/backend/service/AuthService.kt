@@ -3,11 +3,11 @@ package com.msa.eshop.backend.service
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.UnauthorizedException
 import com.msa.eshop.backend.common.dtos.ChangePasswordRequest
-import com.msa.eshop.backend.common.dtos.LoginDataDto
+import com.msa.eshop.backend.common.dtos.LoginRequest
+import com.msa.eshop.backend.common.dtos.LoginResponse
 import com.msa.eshop.backend.common.dtos.LogoutRequest
 import com.msa.eshop.backend.common.dtos.RefreshTokenRequest
-import com.msa.eshop.backend.common.dtos.RefreshTokenResponseDto
-import com.msa.eshop.backend.common.dtos.TokenRequest
+import com.msa.eshop.backend.common.dtos.RefreshTokenResponse
 import com.msa.eshop.backend.domain.repository.CustomerRepository
 import com.msa.eshop.backend.security.JwtTokenService
 import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
@@ -28,12 +28,12 @@ class AuthService(
 
     @Transactional
     fun login(
-        request: TokenRequest,
+        request: LoginRequest,
         ipAddress: String?,
         userAgent: String?
-    ): LoginDataDto {
-        val customerCode = request.customerCode?.trim().orEmpty()
-        val password = request.password?.trim().orEmpty()
+    ): LoginResponse {
+        val customerCode = request.customerCode.trim()
+        val password = request.password.trim()
 
         if (customerCode.isBlank() || password.isBlank()) {
             throw BadRequestException("کد مشتری و رمز عبور الزامی است")
@@ -50,7 +50,7 @@ class AuthService(
             throw UnauthorizedException("کد مشتری یا رمز عبور اشتباه است")
         }
 
-        val token = jwtTokenService.generateToken(customer)
+        val accessToken = jwtTokenService.generateToken(customer)
 
         val refreshToken = refreshTokenService.create(
             customer = customer,
@@ -58,11 +58,38 @@ class AuthService(
             userAgent = userAgent
         )
 
-        return LoginDataDto(
-            token = token,
+        return LoginResponse(
+            accessToken = accessToken,
             refreshToken = refreshToken,
             passwordChangeRequired = customer.passwordChangeRequired
         )
+    }
+
+    @Transactional
+    fun refreshToken(
+        request: RefreshTokenRequest,
+        ipAddress: String?,
+        userAgent: String?
+    ): RefreshTokenResponse {
+        val rotation = refreshTokenService.rotate(
+            rawToken = request.refreshToken,
+            ipAddress = ipAddress,
+            userAgent = userAgent
+        )
+
+        val customer = rotation.customer
+
+        return RefreshTokenResponse(
+            accessToken = jwtTokenService.generateToken(customer),
+            refreshToken = rotation.refreshToken,
+            passwordChangeRequired = customer.passwordChangeRequired
+        )
+    }
+
+    @Transactional
+    fun logout(request: LogoutRequest): Boolean {
+        refreshTokenService.revoke(request.refreshToken)
+        return true
     }
 
     @Transactional
@@ -94,37 +121,8 @@ class AuthService(
         customer.passwordChangeRequired = false
 
         refreshTokenService.revokeAllForCustomer(customer)
-
         customerRepository.save(customer)
 
-        return true
-    }
-
-    @Transactional
-    fun refreshToken(
-        request: RefreshTokenRequest,
-        ipAddress: String?,
-        userAgent: String?
-    ): RefreshTokenResponseDto {
-        val rotation = refreshTokenService.rotate(
-            rawToken = request.refreshToken,
-            ipAddress = ipAddress,
-            userAgent = userAgent
-        )
-
-        val customer = rotation.customer
-        val newAccessToken = jwtTokenService.generateToken(customer)
-
-        return RefreshTokenResponseDto(
-            token = newAccessToken,
-            refreshToken = rotation.refreshToken,
-            passwordChangeRequired = customer.passwordChangeRequired
-        )
-    }
-
-    @Transactional
-    fun logout(request: LogoutRequest): Boolean {
-        refreshTokenService.revoke(request.refreshToken)
         return true
     }
 

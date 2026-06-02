@@ -1,15 +1,13 @@
 package com.msa.eshop.backend.service
 
+import com.msa.eshop.backend.common.dtos.CartCheckoutRequest
+import com.msa.eshop.backend.common.dtos.CartCheckoutResponse
+import com.msa.eshop.backend.common.dtos.CartDetailsDto
+import com.msa.eshop.backend.common.dtos.CartHistoryDto
 import com.msa.eshop.backend.common.dtos.CartSimulateRequest
 import com.msa.eshop.backend.common.dtos.CartSimulateResponse
-import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
 import com.msa.eshop.backend.common.dtos.OrderAddressDto
 import com.msa.eshop.backend.common.dtos.PaymentTermDto
-import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
-import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerDto
-import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerModelRequest
-import com.msa.eshop.backend.common.dtos.SimulateDto
-import com.msa.eshop.backend.common.dtos.SimulateModelRequest
 import com.msa.eshop.backend.service.cart.CartCheckoutService
 import com.msa.eshop.backend.service.cart.CartQueryService
 import org.springframework.stereotype.Service
@@ -19,11 +17,11 @@ class CartService(
     private val cartQueryService: CartQueryService,
     private val cartCheckoutService: CartCheckoutService
 ) {
-    fun simulate(requests: List<SimulateModelRequest>): List<SimulateDto> =
-        cartQueryService.simulate(requests)
+    fun simulate(request: CartSimulateRequest): CartSimulateResponse =
+        cartQueryService.simulate(request)
 
-    fun simulateModern(request: CartSimulateRequest): CartSimulateResponse =
-        cartQueryService.simulateModern(request)
+    fun checkout(request: CartCheckoutRequest): CartCheckoutResponse =
+        cartCheckoutService.checkout(request)
 
     fun currentCustomerAddresses(): List<OrderAddressDto> =
         cartQueryService.currentCustomerAddresses()
@@ -31,12 +29,15 @@ class CartService(
     fun paymentTerms(): List<PaymentTermDto> =
         cartQueryService.paymentTerms()
 
-    fun insertCart(requests: List<InsertCartModelRequest>): Boolean =
-        cartCheckoutService.checkout(requests)
+    fun history(
+        fromDate: String?,
+        toDate: String?
+    ): List<CartHistoryDto> =
+        cartQueryService.history(
+            fromDate = fromDate,
+            toDate = toDate
+        )
 
-    fun history(request: ReportHistoryCustomerModelRequest): List<ReportHistoryCustomerDto> =
-        cartQueryService.history(request)
-
-    fun details(cartCode: Int): List<ReportCartDetailsDto> =
+    fun details(cartCode: Int): CartDetailsDto =
         cartQueryService.details(cartCode)
 }

@@ -8,7 +8,6 @@ import com.msa.eshop.backend.domain.entity.Product
 import com.msa.eshop.backend.domain.repository.ProductRepository
 import com.msa.eshop.backend.service.PricingService
 import com.msa.eshop.backend.service.catalog.ProductResolver
-import com.msa.eshop.backend.service.pricing.PaymentKindResolver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito

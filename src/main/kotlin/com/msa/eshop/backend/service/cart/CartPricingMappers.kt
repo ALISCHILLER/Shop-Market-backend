@@ -3,11 +3,12 @@ package com.msa.eshop.backend.service.cart
 import com.msa.eshop.backend.common.dtos.CartSimulateLineResponse
 import com.msa.eshop.backend.common.dtos.CartSimulateResponse
 
-fun CartPricingResult.toCartSimulateResponse(): CartSimulateResponse {
-    return CartSimulateResponse(
+fun CartPricingResult.toCartSimulateResponse(): CartSimulateResponse =
+    CartSimulateResponse(
         paymentTermId = requireNotNull(paymentTerm.id),
         paymentTermName = paymentTerm.name,
         paymentKind = paymentKind.name,
+        paymentKindTitle = paymentKind.title,
 
         subtotal = subtotal.toPersistedLong(),
         productDiscountTotal = productDiscountTotal.toPersistedLong(),
@@ -23,20 +24,15 @@ fun CartPricingResult.toCartSimulateResponse(): CartSimulateResponse {
                 productCode = line.product.productCode,
                 productName = line.product.productName.orEmpty(),
                 quantity = line.quantity,
-
                 unitPrice = line.product.price,
                 gross = line.gross.toPersistedLong(),
-
                 productDiscountPercent = line.productDiscountPercent,
                 productDiscount = line.productDiscount.toPersistedLong(),
-
                 paymentDiscountPercent = line.paymentDiscountPercent,
                 paymentDiscount = line.paymentDiscount.toPersistedLong(),
-
                 taxableAmount = line.taxableAmount.toPersistedLong(),
                 tax = line.tax.toPersistedLong(),
                 total = line.total.toPersistedLong()
             )
         }
     )
-}

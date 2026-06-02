@@ -2,8 +2,8 @@ package com.msa.eshop.backend.service.cart
 
 import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
-import com.msa.eshop.backend.common.dtos.InsertCartModelRequest
-import com.msa.eshop.backend.common.toUuidOrBadRequest
+import com.msa.eshop.backend.common.dtos.CartCheckoutRequest
+import com.msa.eshop.backend.common.dtos.CartCheckoutResponse
 import com.msa.eshop.backend.domain.repository.CartRepository
 import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
 import com.msa.eshop.backend.service.CurrentUserService
@@ -22,28 +22,21 @@ class CartCheckoutService(
 ) {
 
     @Transactional
-    fun checkout(requests: List<InsertCartModelRequest>): Boolean {
-        val header = cartLineNormalizer.extractCheckoutHeader(requests)
-        val lines = cartLineNormalizer.normalizeCheckoutLines(requests)
-
+    fun checkout(request: CartCheckoutRequest): CartCheckoutResponse {
         val currentCustomer = currentUserService.requireCustomer()
 
-        val addressId = header.customerAddressId
-            .toUuidOrBadRequest("شناسه آدرس معتبر نیست")
-
-        val paymentTermId = header.paymentTermId
-            .toUuidOrBadRequest("شناسه روش پرداخت معتبر نیست")
-
-        val address = addressRepository.findById(addressId)
+        val address = addressRepository.findById(request.customerAddressId)
             .orElseThrow { NotFoundException("آدرس سفارش پیدا نشد") }
 
         if (address.customer?.id != currentCustomer.id) {
             throw BadRequestException("آدرس انتخاب‌شده متعلق به این مشتری نیست")
         }
 
+        val lines = cartLineNormalizer.normalize(request.items)
+
         val pricingResult = cartPricingCalculator.calculate(
             CartPricingRequest(
-                paymentTermId = paymentTermId,
+                paymentTermId = request.paymentTermId,
                 lines = lines
             )
         )
@@ -55,8 +48,17 @@ class CartCheckoutService(
             pricingResult = pricingResult
         )
 
-        cartRepository.save(cart)
+        val saved = cartRepository.save(cart)
 
-        return true
+        return CartCheckoutResponse(
+            cartId = requireNotNull(saved.id),
+            cartCode = saved.cartCode,
+            statusCode = saved.statusCode,
+            statusName = saved.statusName,
+            subtotal = saved.subtotal,
+            discountTotal = saved.discountTotal,
+            taxTotal = saved.taxTotal,
+            total = saved.total
+        )
     }
 }

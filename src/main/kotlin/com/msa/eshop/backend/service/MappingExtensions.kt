@@ -6,8 +6,9 @@ import com.msa.eshop.backend.common.dtos.OrderAddressDto
 import com.msa.eshop.backend.common.dtos.PaymentTermDto
 import com.msa.eshop.backend.common.dtos.ProductDto
 import com.msa.eshop.backend.common.dtos.ProductGroupDto
-import com.msa.eshop.backend.common.dtos.ReportCartDetailsDto
-import com.msa.eshop.backend.common.dtos.ReportHistoryCustomerDto
+import com.msa.eshop.backend.common.dtos.CartDetailsDto
+import com.msa.eshop.backend.common.dtos.CartDetailsLineDto
+import com.msa.eshop.backend.common.dtos.CartHistoryDto
 import com.msa.eshop.backend.common.dtos.UserDto
 import com.msa.eshop.backend.domain.entity.Banner
 import com.msa.eshop.backend.domain.entity.Cart
@@ -96,30 +97,56 @@ fun PaymentTerm.toDto(): PaymentTermDto = PaymentTermDto(
     active = active
 )
 
-fun Cart.toHistoryDto(): ReportHistoryCustomerDto = ReportHistoryCustomerDto(
-    id = requireNotNull(id).toString(),
-    customerCode = customer?.customerCode.orEmpty(),
-    customerName = customerNameSnapshot,
-    date = salesDate.toString(),
-    address = customerAddressSnapshot,
-    status = statusName,
-    color = statusColor,
-    cartCode = cartCode
-)
+fun Cart.toHistoryDto(): CartHistoryDto =
+    CartHistoryDto(
+        id = requireNotNull(id),
+        cartCode = cartCode,
+        customerId = customer?.id,
+        customerCode = customer?.customerCode.orEmpty(),
+        customerName = customerNameSnapshot,
+        salesDate = salesDate.toString(),
+        statusCode = statusCode,
+        statusName = statusName,
+        statusColor = statusColor,
+        subtotal = subtotal,
+        discountTotal = discountTotal,
+        taxTotal = taxTotal,
+        total = total
+    )
 
-fun CartItem.toDetailsDto(cart: Cart): ReportCartDetailsDto = ReportCartDetailsDto(
-    id = requireNotNull(id).toString(),
-    cartCode = cart.cartCode,
-    customerAddress = cart.customerAddressSnapshot,
-    customerName = cart.customerNameSnapshot,
-    discount = discount,
-    price = price,
-    productCode = productCode.toString(),
-    productImageUrl = productImageUrl.orEmpty(),
-    productName = productName,
-    quantity = quantity,
-    salesDate = cart.salesDate.toString(),
-    statusName = cart.statusName,
-    tax = tax,
-    total = total
-)
+fun Cart.toDetailsDto(): CartDetailsDto =
+    CartDetailsDto(
+        id = requireNotNull(id),
+        cartCode = cartCode,
+        customerId = customer?.id,
+        customerCode = customer?.customerCode.orEmpty(),
+        customerName = customerNameSnapshot,
+        customerAddress = customerAddressSnapshot,
+        paymentTermId = paymentTerm?.id,
+        paymentTermName = paymentTerm?.name.orEmpty(),
+        statusCode = statusCode,
+        statusName = statusName,
+        statusColor = statusColor,
+        salesDate = salesDate.toString(),
+        subtotal = subtotal,
+        discountTotal = discountTotal,
+        taxTotal = taxTotal,
+        total = total,
+        items = items
+            .sortedBy { it.productCode }
+            .map { it.toDetailsLineDto() }
+    )
+
+fun CartItem.toDetailsLineDto(): CartDetailsLineDto =
+    CartDetailsLineDto(
+        id = requireNotNull(id),
+        productId = product?.id,
+        productCode = productCode,
+        productName = productName,
+        productImageUrl = productImageUrl,
+        quantity = quantity,
+        unitPrice = price,
+        discount = discount,
+        tax = tax,
+        total = total
+    )

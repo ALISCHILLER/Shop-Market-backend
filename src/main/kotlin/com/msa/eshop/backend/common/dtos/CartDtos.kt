@@ -1,35 +1,14 @@
 package com.msa.eshop.backend.common.dtos
 
-import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotEmpty
-import jakarta.validation.constraints.NotNull
-import java.util.UUID
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
-data class SimulateModelRequest(
-    val paymentTermId: String? = null,
+import java.util.UUID
 
-    @field:NotNull(message = "کد کالا الزامی است")
-    val productCode: Int,
-
-    @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
-    @field:Max(value = 1_000, message = "تعداد هر کالا نمی‌تواند بیشتر از ۱۰۰۰ باشد")
-    val quantity: Int
-)
-
-data class CartSimulateRequest(
-    @field:Valid
-    @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
-    @field:Size(max = 100, message = "تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از ۱۰۰ باشد")
-    val items: List<CartSimulateLineRequest>,
-
-    @field:NotNull(message = "روش پرداخت الزامی است")
-    val paymentTermId: UUID
-)
-
-data class CartSimulateLineRequest(
+data class CartLineRequest(
     @field:Min(value = 1, message = "کد کالا معتبر نیست")
     val productCode: Int,
 
@@ -38,87 +17,37 @@ data class CartSimulateLineRequest(
     val quantity: Int
 )
 
-data class InsertCartModelRequest(
-    @field:NotBlank(message = "شناسه آدرس الزامی است")
-    val customerAddressId: String,
+data class CartSimulateRequest(
+    @field:NotNull(message = "شناسه روش پرداخت الزامی است")
+    val paymentTermId: UUID,
 
-    @field:NotBlank(message = "شناسه روش پرداخت الزامی است")
-    val paymentTermId: String,
-
-    @field:NotNull(message = "کد کالا الزامی است")
-    val productCode: Int,
-
-    @field:Min(value = 1, message = "تعداد کالا باید بزرگ‌تر از صفر باشد")
-    @field:Max(value = 1_000, message = "تعداد هر کالا نمی‌تواند بیشتر از ۱۰۰۰ باشد")
-    val quantity: Int
+    @field:Valid
+    @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
+    @field:Size(max = 100, message = "تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از ۱۰۰ باشد")
+    val items: List<CartLineRequest>
 )
 
-data class ReportHistoryCustomerModelRequest(
-    val customerId: String = "",
-    val fromDate: String = "",
-    val endDate: String = ""
+data class CartCheckoutRequest(
+    @field:NotNull(message = "شناسه آدرس الزامی است")
+    val customerAddressId: UUID,
+
+    @field:NotNull(message = "شناسه روش پرداخت الزامی است")
+    val paymentTermId: UUID,
+
+    @field:Valid
+    @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
+    @field:Size(max = 100, message = "تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از ۱۰۰ باشد")
+    val items: List<CartLineRequest>
 )
 
-data class SimulateDto(
-    val convertFactor1: Int,
-    val convertFactor2: Int,
-    val discountPercent: Int,
-    val discount_Percent_PaymentTerm_Receipt: Long,
-    val discount_Percent_PaymentTerm_Receipt_Tax: Long,
-    val discount_Percent_PaymentTerm_cheque: Long,
-    val discount_Percent_PaymentTerm_cheque_Tax: Long,
-    val discount_Percent_PaymentTerm_immediate: Long,
-    val discount_Percent_PaymentTerm_immediate_Tax: Long,
-    val finalPrice: Long,
-    val finalPriceDiscount: Long,
-    val fullNameKala1: String,
-    val fullNameKala2: String,
-    val id: String,
-    val isTax: Boolean,
-    val paymentTermId: String?,
-    val price: Long,
-    val priceByDiscountPercent: Long,
-    val priceByDiscountPercentAndTax: Long,
-    val priceByDiscountPercentAndTax_Receipt: Long,
-    val priceByDiscountPercentAndTax_cheque: Long,
-    val priceByDiscountPercentAndTax_immediate: Long,
-    val priceDiscount: Long,
-    val productCode: Int,
-    val productGroupCode: Int,
-    val productImage: String,
-    val productName: String,
-    val quantity: Int,
-    val unit1: String,
-    val unit2: String,
-    val unitid1: String,
-    val unitid2: String
-)
-
-data class ReportHistoryCustomerDto(
-    val id: String,
-    val customerCode: String,
-    val customerName: String,
-    val date: String,
-    val address: String,
-    val status: String,
-    val color: String,
-    val cartCode: Int
-)
-
-data class ReportCartDetailsDto(
+data class CartCheckoutResponse(
+    val cartId: UUID,
     val cartCode: Int,
-    val customerAddress: String,
-    val customerName: String,
-    val discount: Long,
-    val id: String,
-    val price: Long,
-    val productCode: String,
-    val productImageUrl: String,
-    val productName: String,
-    val quantity: Int,
-    val salesDate: String,
+    val statusCode: String,
     val statusName: String,
-    val tax: Long,
+    val subtotal: Long,
+    val discountTotal: Long,
+    val taxTotal: Long,
     val total: Long
 )
 
@@ -126,6 +55,7 @@ data class CartSimulateResponse(
     val paymentTermId: UUID,
     val paymentTermName: String,
     val paymentKind: String,
+    val paymentKindTitle: String,
 
     val subtotal: Long,
     val productDiscountTotal: Long,
@@ -158,21 +88,51 @@ data class CartSimulateLineResponse(
     val total: Long
 )
 
-data class CartCheckoutRequest(
-    @field:NotNull(message = "شناسه آدرس الزامی است")
-    val customerAddressId: UUID,
-
-    @field:NotNull(message = "شناسه روش پرداخت الزامی است")
-    val paymentTermId: UUID,
-
-    @field:Valid
-    @field:NotEmpty(message = "لیست کالاها نمی‌تواند خالی باشد")
-    @field:Size(max = 100, message = "تعداد ردیف‌های سبد خرید نمی‌تواند بیشتر از ۱۰۰ باشد")
-    val items: List<CartSimulateLineRequest>
+data class CartHistoryDto(
+    val id: UUID,
+    val cartCode: Int,
+    val customerId: UUID?,
+    val customerCode: String,
+    val customerName: String,
+    val salesDate: String,
+    val statusCode: String,
+    val statusName: String,
+    val statusColor: String,
+    val subtotal: Long,
+    val discountTotal: Long,
+    val taxTotal: Long,
+    val total: Long
 )
 
-data class CartHistoryQueryDto(
-    val customerId: UUID? = null,
-    val fromDate: String? = null,
-    val toDate: String? = null
+data class CartDetailsDto(
+    val id: UUID,
+    val cartCode: Int,
+    val customerId: UUID?,
+    val customerCode: String,
+    val customerName: String,
+    val customerAddress: String,
+    val paymentTermId: UUID?,
+    val paymentTermName: String,
+    val statusCode: String,
+    val statusName: String,
+    val statusColor: String,
+    val salesDate: String,
+    val subtotal: Long,
+    val discountTotal: Long,
+    val taxTotal: Long,
+    val total: Long,
+    val items: List<CartDetailsLineDto>
+)
+
+data class CartDetailsLineDto(
+    val id: UUID,
+    val productId: UUID?,
+    val productCode: Int,
+    val productName: String,
+    val productImageUrl: String?,
+    val quantity: Int,
+    val unitPrice: Long,
+    val discount: Long,
+    val tax: Long,
+    val total: Long
 )
