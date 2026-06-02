@@ -27,7 +27,8 @@ class JwtTokenServiceTest {
         val customer = Customer(
             customerCode = "C001",
             customerName = "Customer",
-            role = "ADMIN"
+            role = "ADMIN",
+            tokenVersion = 3
         ).apply {
             id = userId
         }
@@ -39,6 +40,9 @@ class JwtTokenServiceTest {
         assertEquals("C001", claims?.subject)
         assertEquals(userId.toString(), claims?.userId)
         assertEquals("ADMIN", claims?.role)
+        assertEquals(3, claims?.tokenVersion)
+        assertNotNull(claims?.issuedAtEpoch)
+        assertNotNull(claims?.expiresAtEpoch)
     }
 
     @Test

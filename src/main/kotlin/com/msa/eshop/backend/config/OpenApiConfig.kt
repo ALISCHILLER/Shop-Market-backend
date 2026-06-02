@@ -11,8 +11,10 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class OpenApiConfig(
-    @param:Value("\${info.app.version:2.0.0}") private val appVersion: String
+    @param:Value("\${info.app.version:2.0.0}")
+    private val appVersion: String
 ) {
+
     @Bean
     fun openApi(): OpenAPI {
         val schemeName = "bearerAuth"
@@ -20,9 +22,9 @@ class OpenApiConfig(
         return OpenAPI()
             .info(
                 Info()
-                    .title("Shop Market Compose API")
+                    .title("Shop Market Backend API")
                     .version(appVersion)
-                    .description("Android-compatible e-commerce API built with Spring Boot and Kotlin")
+                    .description("Clean REST e-commerce backend built with Spring Boot and Kotlin")
             )
             .components(
                 Components().addSecuritySchemes(

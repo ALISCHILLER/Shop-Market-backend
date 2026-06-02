@@ -42,10 +42,10 @@ open class AuditLog(
     @Column(name = "ip_address", length = 64)
     open var ipAddress: String? = null,
 
-    @Column(name = "user_agent")
+    @Column(name = "user_agent", columnDefinition = "text")
     open var userAgent: String? = null,
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "text")
     open var description: String? = null
 
 ) : BaseUuidEntity() {

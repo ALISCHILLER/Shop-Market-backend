@@ -6,6 +6,7 @@ import com.msa.eshop.backend.domain.entity.Customer
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -30,6 +31,10 @@ class JwtTokenService(
             sub = customer.customerCode,
             uid = requireNotNull(customer.id).toString(),
             role = customer.role.uppercase(),
+            tv = customer.tokenVersion,
+            pca = customer.passwordChangedAt
+                ?.toInstant()
+                ?.epochSecond,
             iat = now.epochSecond,
             exp = now.plusSeconds(jwtProperties.expirationMinutes * 60).epochSecond
         )
@@ -66,7 +71,8 @@ class JwtTokenService(
             val payloadBytes = decoder.decode(parts[1])
             val payload = objectMapper.readValue(payloadBytes, JwtPayload::class.java)
 
-            if (Instant.now().epochSecond >= payload.exp) return null
+            val now = Instant.now().epochSecond
+            if (now >= payload.exp) return null
 
             val subject = payload.sub.takeIf { it.isNotBlank() } ?: return null
             val userId = payload.uid.takeIf { it.isNotBlank() } ?: return null
@@ -75,7 +81,11 @@ class JwtTokenService(
             JwtClaims(
                 subject = subject,
                 userId = userId,
-                role = role
+                role = role,
+                tokenVersion = payload.tv,
+                passwordChangedAtEpoch = payload.pca,
+                issuedAtEpoch = payload.iat,
+                expiresAtEpoch = payload.exp
             )
         }.getOrNull()
     }
@@ -103,8 +113,13 @@ class JwtTokenService(
 data class JwtClaims(
     val subject: String,
     val userId: String,
-    val role: String
+    val role: String,
+    val tokenVersion: Long,
+    val passwordChangedAtEpoch: Long?,
+    val issuedAtEpoch: Long,
+    val expiresAtEpoch: Long
 )
+
 data class JwtHeader(
     val alg: String = "",
     val typ: String = ""
@@ -114,6 +129,8 @@ private data class JwtPayload(
     val sub: String = "",
     val uid: String = "",
     val role: String = "CUSTOMER",
+    val tv: Long = 0,
+    val pca: Long? = null,
     val iat: Long = 0,
     val exp: Long = 0
 )

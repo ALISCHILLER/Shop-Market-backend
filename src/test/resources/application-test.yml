@@ -1,0 +1,31 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+
+  flyway:
+    locations:
+      - classpath:db/migration/common
+      - classpath:db/migration/dev
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  jwt:
+    secret: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    expiration-minutes: 60
+
+  auth:
+    refresh-token-expiration-days: 30
+
+  cors:
+    allowed-origins: "*"
+
+  security:
+    trust-forwarded-headers: false
+
+  rate-limit:
+    auth:
+      enabled: false

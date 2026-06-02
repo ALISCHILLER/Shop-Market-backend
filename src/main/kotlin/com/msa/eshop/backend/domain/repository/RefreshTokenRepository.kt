@@ -30,6 +30,23 @@ interface RefreshTokenRepository : JpaRepository<RefreshToken, UUID> {
         customerId: UUID
     ): List<RefreshToken>
 
+    fun findByFamilyIdAndRevokedAtIsNull(
+        familyId: UUID
+    ): List<RefreshToken>
+
+    @Modifying
+    @Query(
+        """
+        update RefreshToken rt
+        set rt.revokedAt = current_timestamp
+        where rt.familyId = :familyId
+          and rt.revokedAt is null
+        """
+    )
+    fun revokeActiveFamily(
+        @Param("familyId") familyId: UUID
+    ): Int
+
     @Modifying
     @Query("delete from RefreshToken rt where rt.customer.id = :customerId")
     fun deleteByCustomerId(

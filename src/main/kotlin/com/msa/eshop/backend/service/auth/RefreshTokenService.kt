@@ -12,6 +12,7 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.OffsetDateTime
 import java.util.Base64
+import java.util.UUID
 
 @Service
 class RefreshTokenService(
@@ -27,9 +28,11 @@ class RefreshTokenService(
         userAgent: String?
     ): String {
         val rawToken = generateRawToken()
+
         val refreshToken = buildRefreshToken(
             rawToken = rawToken,
             customer = customer,
+            familyId = UUID.randomUUID(),
             ipAddress = ipAddress,
             userAgent = userAgent
         )
@@ -66,6 +69,7 @@ class RefreshTokenService(
             ?: throw BadRequestException("Refresh token معتبر نیست")
 
         if (!currentToken.isActive(now)) {
+            handleInactiveTokenReuseIfNeeded(currentToken, now)
             throw BadRequestException("Refresh token منقضی یا غیرفعال شده است")
         }
 
@@ -76,12 +80,18 @@ class RefreshTokenService(
             throw UnauthorizedException("حساب کاربری غیرفعال است")
         }
 
-        currentToken.revoke(now)
-
         val newRawToken = generateRawToken()
+        val newTokenHash = hash(newRawToken)
+
+        currentToken.markReplacedBy(
+            newTokenHash = newTokenHash,
+            now = now
+        )
+
         val newRefreshToken = buildRefreshToken(
             rawToken = newRawToken,
             customer = customer,
+            familyId = currentToken.familyId,
             ipAddress = ipAddress,
             userAgent = userAgent
         )
@@ -122,18 +132,36 @@ class RefreshTokenService(
         refreshTokenRepository.deleteByCustomerId(customerId)
     }
 
+    private fun handleInactiveTokenReuseIfNeeded(
+        token: RefreshToken,
+        now: OffsetDateTime
+    ) {
+        val looksLikeReuse =
+            token.revokedAt != null &&
+                    token.replacedByTokenHash != null &&
+                    token.reuseDetectedAt == null
+
+        if (!looksLikeReuse) return
+
+        token.markReused(now)
+        refreshTokenRepository.revokeActiveFamily(token.familyId)
+    }
+
     private fun buildRefreshToken(
         rawToken: String,
         customer: Customer,
+        familyId: UUID,
         ipAddress: String?,
         userAgent: String?
-    ): RefreshToken = RefreshToken(
-        customer = customer,
-        tokenHash = hash(rawToken),
-        expiresAt = OffsetDateTime.now().plusDays(refreshTokenExpirationDays),
-        ipAddress = ipAddress?.take(MAX_IP_LENGTH),
-        userAgent = userAgent?.take(MAX_USER_AGENT_LENGTH)
-    )
+    ): RefreshToken =
+        RefreshToken(
+            customer = customer,
+            tokenHash = hash(rawToken),
+            familyId = familyId,
+            expiresAt = OffsetDateTime.now().plusDays(refreshTokenExpirationDays),
+            ipAddress = ipAddress?.take(MAX_IP_LENGTH),
+            userAgent = userAgent?.take(MAX_USER_AGENT_LENGTH)
+        )
 
     private fun generateRawToken(): String {
         val bytes = ByteArray(RAW_TOKEN_BYTES)

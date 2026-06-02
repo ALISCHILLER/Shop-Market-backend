@@ -131,7 +131,7 @@ POST   /api/v1/admin/product-groups
 DELETE /api/v1/admin/product-groups/{code}
 
 GET    /api/v1/admin/dashboard
-GET    /api/v1/admin/audit-logs/page
+GET    /api/v1/admin/audit-logs
 ```
 
 ---

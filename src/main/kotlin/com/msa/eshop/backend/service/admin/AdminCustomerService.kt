@@ -9,11 +9,11 @@ import com.msa.eshop.backend.common.dtos.PageResponseDto
 import com.msa.eshop.backend.common.dtos.UpsertCustomerRequest
 import com.msa.eshop.backend.common.dtos.UserDto
 import com.msa.eshop.backend.common.toPageResponse
-import com.msa.eshop.backend.domain.repository.CartRepository
 import com.msa.eshop.backend.domain.entity.Customer
+import com.msa.eshop.backend.domain.entity.CustomerRole
+import com.msa.eshop.backend.domain.repository.CartRepository
 import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
 import com.msa.eshop.backend.domain.repository.CustomerRepository
-import com.msa.eshop.backend.domain.entity.CustomerRole
 import com.msa.eshop.backend.service.audit.AuditLogService
 import com.msa.eshop.backend.service.auth.PasswordPolicyValidator
 import com.msa.eshop.backend.service.auth.RefreshTokenService
@@ -99,11 +99,10 @@ class AdminCustomerService(
             nationalCode = request.nationalCode.cleanOrNull(),
             passwordHash = passwordEncoder.encode(rawPassword),
             salt = PASSWORD_ALGORITHM,
+            passwordChangeRequired = true,
             role = normalizedRole,
             enabled = request.enabled
-        ).apply {
-            passwordChangeRequired = true
-        }
+        )
 
         val savedCustomer = customerRepository.save(customer)
 
@@ -138,6 +137,7 @@ class AdminCustomerService(
         }
 
         var shouldRevokeTokens = false
+        var tokenAlreadyInvalidated = false
         var passwordChanged = false
 
         customer.customerCode = customerCode
@@ -157,7 +157,7 @@ class AdminCustomerService(
             shouldRevokeTokens = true
         }
 
-        if (oldEnabled && !customer.enabled) {
+        if (oldEnabled && !request.enabled) {
             shouldRevokeTokens = true
         }
 
@@ -171,12 +171,19 @@ class AdminCustomerService(
                 customerCode = customerCode
             )
 
-            customer.passwordHash = passwordEncoder.encode(newPassword)
-            customer.salt = PASSWORD_ALGORITHM
-            customer.passwordChangeRequired = true
+            customer.changePasswordHash(
+                encodedPassword = passwordEncoder.encode(newPassword),
+                algorithm = PASSWORD_ALGORITHM,
+                requireChange = true
+            )
 
             passwordChanged = true
             shouldRevokeTokens = true
+            tokenAlreadyInvalidated = true
+        }
+
+        if (shouldRevokeTokens && !tokenAlreadyInvalidated) {
+            customer.invalidateTokens()
         }
 
         val savedCustomer = customerRepository.save(customer)
@@ -241,7 +248,9 @@ class AdminCustomerService(
             "nationalCode" to customer.nationalCode,
             "role" to customer.role,
             "enabled" to customer.enabled,
-            "passwordChangeRequired" to customer.passwordChangeRequired
+            "passwordChangeRequired" to customer.passwordChangeRequired,
+            "passwordChangedAt" to customer.passwordChangedAt,
+            "tokenVersion" to customer.tokenVersion
         )
 
     private companion object {

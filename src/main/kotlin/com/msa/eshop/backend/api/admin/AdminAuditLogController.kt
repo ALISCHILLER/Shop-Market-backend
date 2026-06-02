@@ -16,8 +16,8 @@ class AdminAuditLogController(
     private val auditLogService: AuditLogService
 ) {
 
-    @GetMapping("/page")
-    fun page(
+    @GetMapping
+    fun auditLogs(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
         @RequestParam(required = false) action: String?,
@@ -30,7 +30,7 @@ class AdminAuditLogController(
         @RequestParam(defaultValue = "DESC") direction: String
     ): BaseResponse<PageResponseDto<AuditLogDto>> =
         BaseResponse(
-            auditLogService.search(
+            data = auditLogService.search(
                 page = page,
                 size = size,
                 action = action,

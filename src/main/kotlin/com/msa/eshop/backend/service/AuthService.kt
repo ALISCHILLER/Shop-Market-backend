@@ -116,9 +116,11 @@ class AuthService(
             customerCode = customer.customerCode
         )
 
-        customer.passwordHash = passwordEncoder.encode(newPassword)
-        customer.salt = PASSWORD_ALGORITHM
-        customer.passwordChangeRequired = false
+        customer.changePasswordHash(
+            encodedPassword = passwordEncoder.encode(newPassword),
+            algorithm = PASSWORD_ALGORITHM,
+            requireChange = false
+        )
 
         refreshTokenService.revokeAllForCustomer(customer)
         customerRepository.save(customer)

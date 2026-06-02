@@ -1,7 +1,7 @@
 package com.msa.eshop.backend.security
 
-import com.msa.eshop.backend.domain.repository.CustomerRepository
 import com.msa.eshop.backend.domain.entity.CustomerRole
+import com.msa.eshop.backend.domain.repository.CustomerRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -18,6 +18,7 @@ class JwtAuthenticationFilter(
     private val jwtTokenService: JwtTokenService,
     private val customerRepository: CustomerRepository
 ) : OncePerRequestFilter() {
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -54,6 +55,18 @@ class JwtAuthenticationFilter(
 
         if (!customer.enabled) return
         if (customer.id != claimUserId) return
+        if (customer.tokenVersion != claims.tokenVersion) return
+
+        val passwordChangedAtEpoch = customer.passwordChangedAt
+            ?.toInstant()
+            ?.epochSecond
+
+        if (
+            passwordChangedAtEpoch != null &&
+            claims.issuedAtEpoch < passwordChangedAtEpoch
+        ) {
+            return
+        }
 
         val tokenRole = CustomerRole.normalize(claims.role)
         val currentRole = CustomerRole.normalize(customer.role)

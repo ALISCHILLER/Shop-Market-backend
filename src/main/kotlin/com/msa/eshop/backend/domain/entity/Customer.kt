@@ -6,6 +6,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Check
+import java.time.OffsetDateTime
 
 @Entity
 @Table(
@@ -19,7 +20,8 @@ import org.hibernate.annotations.Check
     indexes = [
         Index(name = "idx_customers_role", columnList = "role"),
         Index(name = "idx_customers_enabled", columnList = "enabled"),
-        Index(name = "idx_customers_created_at", columnList = "created_at")
+        Index(name = "idx_customers_created_at", columnList = "created_at"),
+        Index(name = "idx_customers_token_version", columnList = "token_version")
     ]
 )
 @Check(constraints = "role in ('ADMIN', 'CUSTOMER')")
@@ -51,12 +53,19 @@ open class Customer(
     @Column(name = "password_change_required", nullable = false)
     open var passwordChangeRequired: Boolean = false,
 
+    @Column(name = "password_changed_at")
+    open var passwordChangedAt: OffsetDateTime? = null,
+
+    @Column(name = "token_version", nullable = false)
+    open var tokenVersion: Long = 0,
+
     @Column(name = "role", nullable = false, length = 32)
     open var role: String = CustomerRole.CUSTOMER.name,
 
     @Column(name = "enabled", nullable = false)
     open var enabled: Boolean = true
 ) : AuditableUuidEntity() {
+
     fun applyRole(role: CustomerRole) {
         this.role = role.name
     }
@@ -70,6 +79,7 @@ open class Customer(
 
     fun disable() {
         enabled = false
+        invalidateTokens()
     }
 
     fun markPasswordChangeRequired() {
@@ -88,6 +98,12 @@ open class Customer(
         passwordHash = encodedPassword
         salt = algorithm
         passwordChangeRequired = requireChange
+        passwordChangedAt = OffsetDateTime.now()
+        invalidateTokens()
+    }
+
+    fun invalidateTokens() {
+        tokenVersion += 1
     }
 
     fun updateBasicInfo(
@@ -106,4 +122,3 @@ open class Customer(
         this.nationalCode = nationalCode
     }
 }
-

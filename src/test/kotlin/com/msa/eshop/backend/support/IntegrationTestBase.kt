@@ -1,22 +1,29 @@
-package com.msa.eshop.backend
+package com.msa.eshop.backend.support
 
-import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.web.servlet.MockMvc
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
-class EshopApplicationTests {
+abstract class IntegrationTestBase {
 
-    @Test
-    fun contextLoads() {
-    }
+    @Autowired
+    protected lateinit var mockMvc: MockMvc
+
+    @Autowired
+    protected lateinit var objectMapper: ObjectMapper
 
     companion object {
         @Container

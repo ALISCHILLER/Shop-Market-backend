@@ -40,7 +40,7 @@ interface DiscountRepository : JpaRepository<Discount, UUID> {
         and (
             :search is null
             or lower(coalesce(p.productName, '')) like lower(concat('%', :search, '%'))
-            or cast(p.productCode as string) like concat('%', :search, '%')
+            or str(p.productCode) like concat('%', :search, '%')
         )
         """
     )
