@@ -354,3 +354,12 @@ create index idx_audit_logs_entity
 
 create index idx_audit_logs_created_at
     on audit_logs(created_at);
+
+create index idx_customers_token_version
+    on customers(token_version);
+
+create index idx_refresh_tokens_family
+    on refresh_tokens(family_id);
+
+create index idx_refresh_tokens_reuse_detected
+    on refresh_tokens(reuse_detected_at);

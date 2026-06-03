@@ -5,17 +5,69 @@ server:
     include-stacktrace: never
     include-exception: false
 
+  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:framework}
+
+spring:
+  docker:
+    compose:
+      enabled: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations:
+      - classpath:db/migration/common
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        generate_statistics: false
+        jdbc:
+          time_zone: UTC
+
+  datasource:
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+      validation-timeout: ${DB_VALIDATION_TIMEOUT_MS:5000}
+      idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${DB_MAX_LIFETIME_MS:1800000}
+      leak-detection-threshold: ${DB_LEAK_DETECTION_THRESHOLD_MS:0}
+
 springdoc:
   api-docs:
     enabled: false
   swagger-ui:
     enabled: false
 
-spring:
-  flyway:
-    locations:
-      - classpath:db/migration/common
-  jpa:
-    properties:
-      hibernate:
-        format_sql: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    root: ${ROOT_LOG_LEVEL:INFO}
+    com.msa: ${APP_LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN

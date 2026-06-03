@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres:18
-    container_name: eshop-postgres
+    image: postgres:18-alpine
+    container_name: eshop-postgres-local
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eshop}
@@ -10,7 +10,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - eshop_postgres_data:/var/lib/postgresql/data
+      - eshop_postgres_local_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eshop} -d ${POSTGRES_DB:-eshop}"]
       interval: 10s
@@ -19,7 +19,7 @@ services:
 
   api:
     build: .
-    container_name: eshop-api
+    container_name: eshop-api-local
     restart: unless-stopped
     depends_on:
       postgres:
@@ -39,6 +39,7 @@ services:
 
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
       ESHOP_TRUST_FORWARDED_HEADERS: ${ESHOP_TRUST_FORWARDED_HEADERS:-false}
+      ESHOP_TAX_PERCENT: ${ESHOP_TAX_PERCENT:-9}
 
       ESHOP_AUTH_RATE_LIMIT_ENABLED: ${ESHOP_AUTH_RATE_LIMIT_ENABLED:-true}
       ESHOP_AUTH_RATE_LIMIT_LOGIN_CAPACITY: ${ESHOP_AUTH_RATE_LIMIT_LOGIN_CAPACITY:-10}
@@ -52,10 +53,11 @@ services:
     ports:
       - "${API_PORT:-8282}:8282"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8282/actuator/health | grep -q UP"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8282/actuator/health/readiness | grep -q UP"]
       interval: 15s
       timeout: 5s
       retries: 20
+      start_period: 40s
 
 volumes:
-  eshop_postgres_data:
+  eshop_postgres_local_data:
