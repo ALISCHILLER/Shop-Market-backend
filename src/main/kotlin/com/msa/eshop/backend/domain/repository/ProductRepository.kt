@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.util.UUID
-
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.Lock
 interface ProductRepository : JpaRepository<Product, UUID> {
 
     fun findByProductCode(productCode: Int): Product?
@@ -64,4 +65,16 @@ interface ProductRepository : JpaRepository<Product, UUID> {
         @Param("hasDiscount") hasDiscount: Boolean?,
         pageable: Pageable
     ): Page<Product>
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+        """
+    select p
+    from Product p
+    where p.productCode in :productCodes
+    """
+    )
+    fun findByProductCodeInForUpdate(
+        @Param("productCodes") productCodes: Collection<Int>
+    ): List<Product>
 }

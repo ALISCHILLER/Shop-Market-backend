@@ -40,4 +40,14 @@ class CartService(
 
     fun details(cartCode: Int): CartDetailsDto =
         cartQueryService.details(cartCode)
+
+    fun checkout(
+        request: CartCheckoutRequest,
+        idempotencyKey: String?
+    ): CartCheckoutResponse =
+        cartCheckoutService.checkout(
+            request = request,
+            idempotencyKey = idempotencyKey
+        )
+
 }

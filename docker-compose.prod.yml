@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: eshop-backend:${APP_IMAGE_TAG:-latest}
+    image: ${APP_IMAGE:?APP_IMAGE is required}
     container_name: eshop-api-prod
     restart: unless-stopped
     depends_on:

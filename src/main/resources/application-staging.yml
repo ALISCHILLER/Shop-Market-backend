@@ -31,8 +31,8 @@ spring:
 
   datasource:
     hikari:
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
-      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
       connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
       validation-timeout: ${DB_VALIDATION_TIMEOUT_MS:5000}
       idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
@@ -41,9 +41,9 @@ spring:
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
   swagger-ui:
-    enabled: false
+    enabled: true
 
 management:
   endpoints:
@@ -54,14 +54,11 @@ management:
     health:
       probes:
         enabled: true
-      show-details: never
+      show-details: when_authorized
   health:
     livenessstate:
       enabled: true
     readinessstate:
-      enabled: true
-  info:
-    env:
       enabled: true
 
 logging:
@@ -71,7 +68,6 @@ logging:
   level:
     root: ${ROOT_LOG_LEVEL:INFO}
     com.msa: ${APP_LOG_LEVEL:INFO}
-    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
     org.hibernate.SQL: WARN
     org.hibernate.orm.jdbc.bind: WARN
-

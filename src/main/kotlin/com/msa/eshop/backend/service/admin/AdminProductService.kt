@@ -86,7 +86,7 @@ class AdminProductService(
             newValue = productSnapshot(savedProduct),
             description = "Product created by admin"
         )
-
+        product.setStockOnHand(request.stockOnHand)
         return savedProduct.toDto()
     }
 
@@ -181,6 +181,9 @@ class AdminProductService(
         if (request.convertFactor2 <= 0) {
             throw BadRequestException("ضریب تبدیل واحد دوم معتبر نیست")
         }
+        if (request.stockOnHand < 0) {
+            throw BadRequestException("موجودی کالا معتبر نیست")
+        }
     }
 
     private fun requireCategory(code: Int) {
@@ -206,7 +209,10 @@ class AdminProductService(
             "price" to product.price,
             "isTax" to product.isTax,
             "isDiscounts" to product.isDiscounts,
-            "productImage" to product.productImage
+            "productImage" to product.productImage,
+            "stockOnHand" to product.stockOnHand,
+            "reservedStock" to product.reservedStock,
+            "availableStock" to product.availableStock()
         )
 
     private companion object {

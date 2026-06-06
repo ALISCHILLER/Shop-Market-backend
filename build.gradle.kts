@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.spring") version "2.3.21"
     kotlin("plugin.jpa") version "2.3.21"
+    id("org.owasp.dependencycheck") version "12.2.2"
 }
 
 group = "com.msa.eshop.backend"
@@ -71,4 +72,10 @@ tasks.bootJar {
     layered {
         enabled.set(true)
     }
+}
+dependencyCheck {
+    failBuildOnCVSS = 7.0f
+    suppressionFile = "config/dependency-check/suppressions.xml"
+    formats = listOf("HTML", "JSON")
+    analyzers.assemblyEnabled = false
 }

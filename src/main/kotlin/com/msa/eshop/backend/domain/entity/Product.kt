@@ -74,6 +74,12 @@ open class Product(
     @Column(name = "product_image", columnDefinition = "text")
     open var productImage: String? = null,
 
+    @Column(name = "stock_on_hand", nullable = false)
+    open var stockOnHand: Int = 0,
+
+    @Column(name = "reserved_stock", nullable = false)
+    open var reservedStock: Int = 0,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
         name = "product_group_code",
@@ -108,4 +114,37 @@ open class Product(
     fun updateImage(imageUrl: String?) {
         productImage = imageUrl?.trim()?.takeIf { it.isNotBlank() }
     }
+    fun availableStock(): Int =
+        stockOnHand - reservedStock
+
+    fun reserveStock(quantity: Int) {
+        require(quantity > 0) { "Reservation quantity must be positive" }
+        require(availableStock() >= quantity) { "Insufficient product stock" }
+
+        reservedStock += quantity
+    }
+
+    fun releaseReservedStock(quantity: Int) {
+        require(quantity > 0) { "Release quantity must be positive" }
+        require(reservedStock >= quantity) { "Reserved stock cannot become negative" }
+
+        reservedStock -= quantity
+    }
+
+    fun consumeReservedStock(quantity: Int) {
+        require(quantity > 0) { "Consume quantity must be positive" }
+        require(reservedStock >= quantity) { "Reserved stock cannot become negative" }
+        require(stockOnHand >= quantity) { "Stock on hand cannot become negative" }
+
+        reservedStock -= quantity
+        stockOnHand -= quantity
+    }
+
+    fun setStockOnHand(quantity: Int) {
+        require(quantity >= 0) { "Stock cannot be negative" }
+        require(quantity >= reservedStock) { "Stock cannot be lower than reserved stock" }
+
+        stockOnHand = quantity
+    }
+
 }

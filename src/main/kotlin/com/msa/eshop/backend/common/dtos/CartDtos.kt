@@ -48,7 +48,8 @@ data class CartCheckoutResponse(
     val subtotal: Long,
     val discountTotal: Long,
     val taxTotal: Long,
-    val total: Long
+    val total: Long,
+    val idempotencyKey: String? = null
 )
 
 data class CartSimulateResponse(

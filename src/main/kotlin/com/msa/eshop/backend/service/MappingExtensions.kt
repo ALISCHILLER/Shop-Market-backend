@@ -49,7 +49,10 @@ fun Product.toDto(): ProductDto = ProductDto(
     price = price,
     isDiscounts = isDiscounts,
     isTax = isTax,
-    productImage = productImage
+    productImage = productImage,
+    stockOnHand = stockOnHand,
+    reservedStock = reservedStock,
+    availableStock = availableStock(),
 )
 
 fun ProductCategory.toDto(): ProductGroupDto = ProductGroupDto(

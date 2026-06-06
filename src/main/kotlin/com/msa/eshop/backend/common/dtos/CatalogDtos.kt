@@ -20,7 +20,10 @@ data class ProductDto(
     val price: Long,
     val isDiscounts: Boolean,
     val isTax: Boolean = true,
-    val productImage: String?
+    val productImage: String?,
+    val stockOnHand: Int,
+    val reservedStock: Int,
+    val availableStock: Int,
 )
 
 data class ProductGroupDto(
@@ -88,7 +91,9 @@ data class UpsertProductRequest(
 
     val isDiscounts: Boolean = false,
     val isTax: Boolean = true,
-    val productImage: String?
+    val productImage: String?,
+    @field:Min(value = 0, message = "موجودی کالا معتبر نیست")
+    val stockOnHand: Int = 0,
 )
 
 data class UpsertDiscountRequest(

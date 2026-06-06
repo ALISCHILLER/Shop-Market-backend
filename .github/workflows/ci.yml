@@ -13,14 +13,13 @@ on:
       - develop
 
 jobs:
-  build-test:
-    name: Build and Test
+  build-test-scan:
+    name: Build, Test, Scan, and Docker Build
     runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:27-dind
-        options: --privileged
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout
@@ -38,6 +37,18 @@ jobs:
 
       - name: Run tests
         run: ./gradlew clean test --no-daemon
+
+      - name: Run dependency vulnerability scan
+        run: ./gradlew dependencyCheckAnalyze --no-daemon
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      - name: Upload dependency-check reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: build/reports/dependency-check-report.*
 
       - name: Build boot jar
         run: ./gradlew bootJar --no-daemon

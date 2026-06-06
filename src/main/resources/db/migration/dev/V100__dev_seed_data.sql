@@ -68,7 +68,9 @@ insert into products (
     price,
     is_discounts,
     is_tax,
-    product_image
+    product_image,
+    stock_on_hand,
+    reserved_stock
 ) values
       ('00000000-0000-0000-0000-000000000101', 'برنج ایرانی ۱۰ کیلویی', 100101, 'کیسه', 'کیسه', 'BAG', 1, 'عدد', 'عدد', 1, 'PCS', 10, 8500000, true, true, 'https://placehold.co/600x400/png?text=Rice'),
       ('00000000-0000-0000-0000-000000000102', 'روغن آفتابگردان ۱.۸ لیتری', 100102, 'کارتن', 'کارتن', 'BOX', 1, 'بطری', 'بطری', 6, 'BTL', 10, 920000, true, true, 'https://placehold.co/600x400/png?text=Oil'),
