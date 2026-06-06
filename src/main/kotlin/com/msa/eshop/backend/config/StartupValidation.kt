@@ -99,19 +99,33 @@ class StartupValidation(
         const val MAX_STRICT_REFRESH_TOKEN_DAYS = 90L
 
         val RELAXED_PROFILES = setOf("dev", "test", "local")
-        val TRUSTED_PROXY_PROFILES = setOf("prod", "docker", "staging")
+        val TRUSTED_PROXY_PROFILES = setOf("prod", "staging")
 
         val PLACEHOLDER_SECRET_PATTERNS = setOf(
             "change-me",
+            "change_me",
             "changeme",
+            "change-this",
+            "change_this",
+            "changethis",
             "please-change",
             "replace-me",
+            "replace_this",
             "replace-this",
             "replace-with",
             "your-secret",
             "sample-secret",
             "example-secret",
-            "default-secret"
+            "default-secret",
+            "production-secret",
+            "prod-secret",
+            "jwt-secret",
+            "real-random",
+            "real_random",
+            "random-64",
+            "random_64",
+            "64-plus",
+            "64_plus"
         )
     }
 }

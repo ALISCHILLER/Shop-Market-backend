@@ -7,10 +7,15 @@
 .DS_Store
 Thumbs.db
 
-# Environment
+# Environment - real secrets must never be committed
 .env
-.env.*
+.env.local
+.env.*.local
+
+# Keep safe templates
 !.env.example
+!.env.docker.example
+!.env.prod.example
 
 # Logs
 logs/
