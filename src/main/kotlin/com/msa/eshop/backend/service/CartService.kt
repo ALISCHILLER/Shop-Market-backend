@@ -17,11 +17,30 @@ class CartService(
     private val cartQueryService: CartQueryService,
     private val cartCheckoutService: CartCheckoutService
 ) {
+
     fun simulate(request: CartSimulateRequest): CartSimulateResponse =
         cartQueryService.simulate(request)
 
+    /**
+     * Backward-compatible overload.
+     *
+     * اگر جایی از پروژه هنوز checkout بدون Idempotency-Key را صدا می‌زند،
+     * compile خراب نمی‌شود. اما Controller جدید باید overload پایین را صدا بزند.
+     */
     fun checkout(request: CartCheckoutRequest): CartCheckoutResponse =
-        cartCheckoutService.checkout(request)
+        cartCheckoutService.checkout(
+            request = request,
+            idempotencyKey = null
+        )
+
+    fun checkout(
+        request: CartCheckoutRequest,
+        idempotencyKey: String?
+    ): CartCheckoutResponse =
+        cartCheckoutService.checkout(
+            request = request,
+            idempotencyKey = idempotencyKey
+        )
 
     fun currentCustomerAddresses(): List<OrderAddressDto> =
         cartQueryService.currentCustomerAddresses()
@@ -40,14 +59,4 @@ class CartService(
 
     fun details(cartCode: Int): CartDetailsDto =
         cartQueryService.details(cartCode)
-
-    fun checkout(
-        request: CartCheckoutRequest,
-        idempotencyKey: String?
-    ): CartCheckoutResponse =
-        cartCheckoutService.checkout(
-            request = request,
-            idempotencyKey = idempotencyKey
-        )
-
 }

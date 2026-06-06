@@ -24,10 +24,20 @@ import org.hibernate.annotations.Check
         Index(name = "idx_products_group_code", columnList = "product_group_code"),
         Index(name = "idx_products_product_name", columnList = "product_name"),
         Index(name = "idx_products_is_discounts", columnList = "is_discounts"),
-        Index(name = "idx_products_is_tax", columnList = "is_tax")
+        Index(name = "idx_products_is_tax", columnList = "is_tax"),
+        Index(name = "idx_products_stock", columnList = "stock_on_hand, reserved_stock")
     ]
 )
-@Check(constraints = "price >= 0 and convert_factor1 > 0 and convert_factor2 > 0")
+@Check(
+    constraints = """
+        price >= 0
+        and convert_factor1 > 0
+        and convert_factor2 > 0
+        and stock_on_hand >= 0
+        and reserved_stock >= 0
+        and reserved_stock <= stock_on_hand
+    """
+)
 open class Product(
     @Column(name = "product_name", length = 255)
     open var productName: String? = null,
@@ -89,7 +99,8 @@ open class Product(
         foreignKey = ForeignKey(name = "fk_products_product_category")
     )
     open var category: ProductCategory? = null
-) : AuditableUuidEntity(){
+) : AuditableUuidEntity() {
+
     fun changePrice(newPrice: Long) {
         require(newPrice >= 0) { "Product price cannot be negative" }
         price = newPrice
@@ -112,10 +123,16 @@ open class Product(
     }
 
     fun updateImage(imageUrl: String?) {
-        productImage = imageUrl?.trim()?.takeIf { it.isNotBlank() }
+        productImage = imageUrl
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
     }
+
     fun availableStock(): Int =
         stockOnHand - reservedStock
+
+    fun hasAvailableStock(quantity: Int): Boolean =
+        quantity > 0 && availableStock() >= quantity
 
     fun reserveStock(quantity: Int) {
         require(quantity > 0) { "Reservation quantity must be positive" }
@@ -140,11 +157,10 @@ open class Product(
         stockOnHand -= quantity
     }
 
-    fun setStockOnHand(quantity: Int) {
+    fun updateStockOnHand(quantity: Int) {
         require(quantity >= 0) { "Stock cannot be negative" }
         require(quantity >= reservedStock) { "Stock cannot be lower than reserved stock" }
 
         stockOnHand = quantity
     }
-
 }

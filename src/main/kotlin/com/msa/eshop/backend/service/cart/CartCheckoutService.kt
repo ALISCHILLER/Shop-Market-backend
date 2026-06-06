@@ -4,6 +4,7 @@ import com.msa.eshop.backend.common.BadRequestException
 import com.msa.eshop.backend.common.NotFoundException
 import com.msa.eshop.backend.common.dtos.CartCheckoutRequest
 import com.msa.eshop.backend.common.dtos.CartCheckoutResponse
+import com.msa.eshop.backend.domain.entity.CartIdempotencyKey
 import com.msa.eshop.backend.domain.repository.CartRepository
 import com.msa.eshop.backend.domain.repository.CustomerAddressRepository
 import com.msa.eshop.backend.service.CurrentUserService
@@ -48,15 +49,11 @@ class CartCheckoutService(
             }
         }
 
-        val idempotencyRecord = if (normalizedIdempotencyKey != null && requestHash != null) {
-            cartIdempotencyService.createProcessing(
-                customer = currentCustomer,
-                idempotencyKey = normalizedIdempotencyKey,
-                requestHash = requestHash
-            )
-        } else {
-            null
-        }
+        val idempotencyRecord = createIdempotencyRecordIfNeeded(
+            customer = currentCustomer,
+            normalizedIdempotencyKey = normalizedIdempotencyKey,
+            requestHash = requestHash
+        )
 
         try {
             val address = addressRepository.findById(request.customerAddressId)
@@ -82,32 +79,53 @@ class CartCheckoutService(
                 pricingResult = pricingResult
             )
 
-            val saved = cartRepository.save(cart)
+            val savedCart = cartRepository.save(cart)
 
             stockReservationService.reserveForCart(
-                cart = saved,
+                cart = savedCart,
                 lines = lines
             )
 
             cartIdempotencyService.complete(
                 record = idempotencyRecord,
-                cart = saved
+                cart = savedCart
             )
 
-            return CartCheckoutResponse(
-                cartId = requireNotNull(saved.id),
-                cartCode = saved.cartCode,
-                statusCode = saved.statusCode,
-                statusName = saved.statusName,
-                subtotal = saved.subtotal,
-                discountTotal = saved.discountTotal,
-                taxTotal = saved.taxTotal,
-                total = saved.total,
-                idempotencyKey = normalizedIdempotencyKey
-            )
+            return savedCart.toCheckoutResponse(normalizedIdempotencyKey)
         } catch (ex: RuntimeException) {
             cartIdempotencyService.fail(idempotencyRecord)
             throw ex
         }
     }
+
+    private fun createIdempotencyRecordIfNeeded(
+        customer: com.msa.eshop.backend.domain.entity.Customer,
+        normalizedIdempotencyKey: String?,
+        requestHash: String?
+    ): CartIdempotencyKey? {
+        if (normalizedIdempotencyKey == null || requestHash == null) {
+            return null
+        }
+
+        return cartIdempotencyService.createProcessing(
+            customer = customer,
+            idempotencyKey = normalizedIdempotencyKey,
+            requestHash = requestHash
+        )
+    }
+
+    private fun com.msa.eshop.backend.domain.entity.Cart.toCheckoutResponse(
+        idempotencyKey: String?
+    ): CartCheckoutResponse =
+        CartCheckoutResponse(
+            cartId = requireNotNull(id),
+            cartCode = cartCode,
+            statusCode = statusCode,
+            statusName = statusName,
+            subtotal = subtotal,
+            discountTotal = discountTotal,
+            taxTotal = taxTotal,
+            total = total,
+            idempotencyKey = idempotencyKey
+        )
 }

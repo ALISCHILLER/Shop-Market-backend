@@ -65,7 +65,11 @@ class AdminProductService(
 
     @Transactional
     fun create(request: UpsertProductRequest): ProductDto {
-        validateRequest(request)
+        validateRequest(
+            request = request,
+            currentReservedStock = 0
+        )
+
         requireCategory(request.productGroupCode)
 
         if (productRepository.existsByProductCode(request.productCode)) {
@@ -86,21 +90,25 @@ class AdminProductService(
             newValue = productSnapshot(savedProduct),
             description = "Product created by admin"
         )
-        product.setStockOnHand(request.stockOnHand)
+
         return savedProduct.toDto()
     }
 
     @Transactional
     fun update(id: UUID, request: UpsertProductRequest): ProductDto {
-        validateRequest(request)
+        val product = productRepository.findById(id)
+            .orElseThrow { NotFoundException("کالا پیدا نشد") }
+
+        validateRequest(
+            request = request,
+            currentReservedStock = product.reservedStock
+        )
+
         requireCategory(request.productGroupCode)
 
         if (productRepository.existsByProductCodeAndIdNot(request.productCode, id)) {
             throw BadRequestException("کد کالا قبلاً برای کالای دیگری ثبت شده است")
         }
-
-        val product = productRepository.findById(id)
-            .orElseThrow { NotFoundException("کالا پیدا نشد") }
 
         val oldSnapshot = productSnapshot(product)
 
@@ -127,6 +135,10 @@ class AdminProductService(
 
         if (cartItemRepository.countByProductId(id) > 0) {
             throw BadRequestException("این کالا در سفارش استفاده شده و قابل حذف نیست")
+        }
+
+        if (product.reservedStock > 0) {
+            throw BadRequestException("این کالا دارای موجودی رزروشده است و قابل حذف نیست")
         }
 
         val oldSnapshot = productSnapshot(product)
@@ -159,9 +171,14 @@ class AdminProductService(
         isDiscounts = request.isDiscounts
         isTax = request.isTax
         productImage = request.productImage.cleanOrNull()
+
+        updateStockOnHand(request.stockOnHand)
     }
 
-    private fun validateRequest(request: UpsertProductRequest) {
+    private fun validateRequest(
+        request: UpsertProductRequest,
+        currentReservedStock: Int
+    ) {
         if (request.productCode <= 0) {
             throw BadRequestException("کد کالا معتبر نیست")
         }
@@ -181,8 +198,13 @@ class AdminProductService(
         if (request.convertFactor2 <= 0) {
             throw BadRequestException("ضریب تبدیل واحد دوم معتبر نیست")
         }
+
         if (request.stockOnHand < 0) {
             throw BadRequestException("موجودی کالا معتبر نیست")
+        }
+
+        if (request.stockOnHand < currentReservedStock) {
+            throw BadRequestException("موجودی کل نمی‌تواند کمتر از موجودی رزروشده باشد")
         }
     }
 
@@ -223,7 +245,9 @@ class AdminProductService(
         val ALLOWED_SORTS = setOf(
             "productName",
             "productCode",
-            "price"
+            "price",
+            "stockOnHand",
+            "reservedStock"
         )
     }
 }
